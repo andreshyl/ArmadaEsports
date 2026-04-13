@@ -1,0 +1,61 @@
+@inject IMatchService MatchService
+
+<MudDialog>
+    <DialogContent>
+        <MudStack Spacing="3">
+            <MudSelect T="int" @bind-Value="_competitionId" Label="Competition" Variant="Variant.Outlined" FullWidth="true">
+                @foreach (var c in Competitions)
+                {
+                    <MudSelectItem T="int" Value="@c.Id">@c.Name</MudSelectItem>
+                }
+            </MudSelect>
+            <MudTextField @bind-Value="_opponentName" Label="Opponent" Variant="Variant.Outlined" FullWidth="true" Required="true" />
+            <MudSelect T="EVenue" @bind-Value="_venue" Label="Venue" Variant="Variant.Outlined" FullWidth="true">
+                <MudSelectItem T="EVenue" Value="@EVenue.Home">Home</MudSelectItem>
+                <MudSelectItem T="EVenue" Value="@EVenue.Away">Away</MudSelectItem>
+            </MudSelect>
+            <MudDatePicker @bind-Date="_matchDate" Label="Date" Variant="Variant.Outlined" />
+            <MudTimePicker @bind-Time="_matchTime" Label="Time" Variant="Variant.Outlined" />
+            <MudTextField @bind-Value="_matchdayLabel" Label="Round / Matchday label (optional)" Variant="Variant.Outlined" FullWidth="true" />
+            @if (_error is not null)
+            {
+                <MudText Typo="Typo.caption" Color="Color.Error">@_error</MudText>
+            }
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => MudDialog.Cancel())" Variant="Variant.Text">Cancel</MudButton>
+        <MudButton OnClick="Save" Variant="Variant.Filled" Color="Color.Warning">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+    [Parameter] public List<Competition> Competitions { get; set; } = [];
+
+    private int _competitionId;
+    private string _opponentName = string.Empty;
+    private EVenue _venue = EVenue.Home;
+    private DateTime? _matchDate = DateTime.Today;
+    private TimeSpan? _matchTime = TimeSpan.Zero;
+    private string? _matchdayLabel;
+    private string? _error;
+
+    private async Task Save()
+    {
+        if (_competitionId == 0) { _error = "Select a competition."; return; }
+        if (string.IsNullOrWhiteSpace(_opponentName)) { _error = "Opponent name is required."; return; }
+
+        var date = (_matchDate ?? DateTime.Today).Date + (_matchTime ?? TimeSpan.Zero);
+        await MatchService.CreateAsync(new Match
+        {
+            CompetitionId = _competitionId,
+            OpponentName = _opponentName.Trim(),
+            Venue = _venue,
+            MatchDate = date,
+            MatchdayLabel = _matchdayLabel?.Trim(),
+            Status = EMatchStatus.Upcoming,
+        });
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+}

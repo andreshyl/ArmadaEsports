@@ -1,0 +1,65 @@
+@inject IAttributeService AttributeService
+
+<MudDialog>
+    <DialogContent>
+        <MudStack Spacing="2">
+            @for (int i = 0; i < _attrNames.Length; i++)
+            {
+                var idx = i;
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                    <MudText Typo="Typo.body2" Class="aasd__attr-name">@_attrNames[idx]</MudText>
+                    <MudSlider T="int" @bind-Value="_scores[idx]" Min="1" Max="10" Step="1"
+                               Color="Color.Warning" Class="aasd__slider" />
+                    <MudText Typo="Typo.body2" Class="aasd__attr-score">@_scores[idx]</MudText>
+                </MudStack>
+            }
+            <MudTextField @bind-Value="_notes" Label="Notes (optional)" Variant="Variant.Outlined"
+                          FullWidth="true" Lines="2" />
+            @if (_error is not null)
+            {
+                <MudText Typo="Typo.caption" Color="Color.Error">@_error</MudText>
+            }
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => MudDialog.Cancel())" Variant="Variant.Text">Cancel</MudButton>
+        <MudButton OnClick="Save" Variant="Variant.Filled" Color="Color.Warning" Disabled="_saving">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+    [Parameter] public Player Player { get; set; } = null!;
+
+    private static readonly string[] _attrNames =
+    [
+        "Comunicación", "Juego en Equipo", "Posicionamiento", "Decisiones",
+        "Reacción",     "Creatividad",     "Consistencia",    "Adaptabilidad",
+        "Precisión",    "Compostura"
+    ];
+
+    private int[] _scores = Enumerable.Repeat(5, 10).ToArray();
+    private string? _notes;
+    private string? _error;
+    private bool _saving;
+
+    private async Task Save()
+    {
+        _saving = true;
+        _error = null;
+        try
+        {
+            var byteScores = _scores.Select(s => (byte)s).ToArray();
+            await AttributeService.SaveSnapshotAsync(Player.Id, Player.PrimaryPosition?.Code ?? "MCD", byteScores, _notes);
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            _error = $"Error saving: {ex.Message}";
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+}

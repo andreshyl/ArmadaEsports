@@ -1,0 +1,77 @@
+@page "/manager/register"
+@inject IAuthService AuthService
+@inject NavigationManager Nav
+
+<PageTitle>Register — TTF Esports</PageTitle>
+
+<div class="manager__login-wrap">
+    <div class="manager__login-card">
+        <img class="manager__login-logo" src="@AssetExtensions.TeamLogo()" alt="TTF" />
+        <MudText Typo="Typo.h6" Class="manager__login-title">CREATE ACCOUNT</MudText>
+
+        <MudStack Spacing="3">
+            <MudTextField @bind-Value="_username" Label="Username" Variant="Variant.Outlined" FullWidth="true" />
+            <MudTextField @bind-Value="_email" Label="Email" Variant="Variant.Outlined" FullWidth="true" InputType="InputType.Email" />
+            <MudTextField @bind-Value="_password" Label="Password" Variant="Variant.Outlined" FullWidth="true" InputType="InputType.Password" />
+            <MudTextField @bind-Value="_confirm" Label="Confirm Password" Variant="Variant.Outlined" FullWidth="true" InputType="InputType.Password" />
+
+            @if (_error is not null)
+            {
+                <MudText Typo="Typo.caption" Class="manager__login-error">@_error</MudText>
+            }
+            @if (_success)
+            {
+                <MudText Typo="Typo.caption" Class="manager__login-success">Account created. Redirecting...</MudText>
+            }
+
+            <MudButton Variant="Variant.Filled" Color="Color.Warning"
+                       FullWidth="true" OnClick="Register" Disabled="_loading">
+                @(_loading ? "..." : "REGISTER")
+            </MudButton>
+
+            <MudButton Variant="Variant.Text" Color="Color.Default"
+                       FullWidth="true" Href="/manager/login">
+                Back to login
+            </MudButton>
+        </MudStack>
+    </div>
+</div>
+
+@code {
+    private string _username = string.Empty;
+    private string _email = string.Empty;
+    private string _password = string.Empty;
+    private string _confirm = string.Empty;
+    private string? _error;
+    private bool _success;
+    private bool _loading;
+
+    private async Task Register()
+    {
+        _error = null;
+        _success = false;
+
+        if (string.IsNullOrWhiteSpace(_username)) { _error = "Username is required."; return; }
+        if (string.IsNullOrWhiteSpace(_email)) { _error = "Email is required."; return; }
+        if (_password != _confirm) { _error = "Passwords do not match."; return; }
+        if (_password.Length < 6) { _error = "Password must be at least 6 characters."; return; }
+
+        _loading = true;
+        try
+        {
+            var (success, error) = await AuthService.RegisterAsync(_username, _email, _password);
+            if (!success) { _error = error; return; }
+            _success = true;
+            await Task.Delay(1500);
+            Nav.NavigateTo("/manager/login");
+        }
+        catch (Exception ex)
+        {
+            _error = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

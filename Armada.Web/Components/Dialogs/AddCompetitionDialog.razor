@@ -1,0 +1,39 @@
+@inject ICompetitionService CompetitionService
+
+<MudDialog>
+    <DialogContent>
+        <MudStack Spacing="3">
+            <MudTextField @bind-Value="_name" Label="Name" Variant="Variant.Outlined" FullWidth="true" Required="true" />
+            <MudSelect T="ECompetitionType" @bind-Value="_type" Label="Type" Variant="Variant.Outlined" FullWidth="true">
+                @foreach (ECompetitionType t in Enum.GetValues<ECompetitionType>())
+                {
+                    <MudSelectItem T="ECompetitionType" Value="@t">@t</MudSelectItem>
+                }
+            </MudSelect>
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => MudDialog.Cancel())" Variant="Variant.Text">Cancel</MudButton>
+        <MudButton OnClick="Save" Variant="Variant.Filled" Color="Color.Warning">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    private string _name = string.Empty;
+    private ECompetitionType _type = ECompetitionType.League;
+
+    private async Task Save()
+    {
+        if (string.IsNullOrWhiteSpace(_name)) return;
+
+        await CompetitionService.CreateAsync(new Competition
+        {
+            Name = _name.Trim(),
+            CompetitionType = _type,
+        });
+
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+}

@@ -1,0 +1,94 @@
+@page "/"
+@inject IMatchService MatchService
+
+<PageTitle>TTF Esports</PageTitle>
+
+<div class="home__hero">
+    <img class="home__hero-logo" src="@AssetExtensions.TeamLogo()" alt="TTF Esports" />
+    <MudText Typo="Typo.h3" Class="home__hero-title">TTF ESPORTS</MudText>
+    <MudText Typo="Typo.subtitle1" Class="home__hero-subtitle">PRO CLUBS 11V11 — EA FC 26</MudText>
+</div>
+
+<div class="home__stats-strip">
+    <MudContainer MaxWidth="MaxWidth.Large">
+        <MudGrid Justify="Justify.Center">
+            <MudItem xs="6" sm="3">
+                <div class="home__stat-center">
+                    <MudText Typo="Typo.h4" Class="home__stat-value home__stat-value--gold">@_wins</MudText>
+                    <MudText Typo="Typo.caption" Class="home__stat-label">WINS</MudText>
+                </div>
+            </MudItem>
+            <MudItem xs="6" sm="3">
+                <div class="home__stat-center">
+                    <MudText Typo="Typo.h4" Class="home__stat-value home__stat-value--grey">@_draws</MudText>
+                    <MudText Typo="Typo.caption" Class="home__stat-label">DRAWS</MudText>
+                </div>
+            </MudItem>
+            <MudItem xs="6" sm="3">
+                <div class="home__stat-center">
+                    <MudText Typo="Typo.h4" Class="home__stat-value home__stat-value--black">@_losses</MudText>
+                    <MudText Typo="Typo.caption" Class="home__stat-label">LOSSES</MudText>
+                </div>
+            </MudItem>
+            <MudItem xs="6" sm="3">
+                <div class="home__stat-center">
+                    <MudText Typo="Typo.h4" Class="home__stat-value home__stat-value--black">@_goalsFor — @_goalsAgainst</MudText>
+                    <MudText Typo="Typo.caption" Class="home__stat-label">GOALS</MudText>
+                </div>
+            </MudItem>
+        </MudGrid>
+    </MudContainer>
+</div>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="ttf-page">
+    <MudText Typo="Typo.overline" Class="ttf-section-label">RECENT RESULTS</MudText>
+
+    @if (_recentMatches is null)
+    {
+        <MudProgressLinear Color="Color.Warning" Indeterminate="true" />
+    }
+    else if (!_recentMatches.Any())
+    {
+        <MudText Typo="Typo.body2">No matches played yet.</MudText>
+    }
+    else
+    {
+        <MudStack Spacing="2">
+            @foreach (var m in _recentMatches)
+            {
+                <div class="home__result-row">
+                    <MudChip T="string" Size="Size.Small" Class="@ResultChipClass(m.Result)">
+                        @m.Result?.ToString()
+                    </MudChip>
+                    <MudText Typo="Typo.body1" Class="home__result-opponent">vs @m.OpponentName</MudText>
+                    <MudText Typo="Typo.body1" Class="home__result-score">@m.GoalsFor — @m.GoalsAgainst</MudText>
+                    <MudText Typo="Typo.caption" Class="home__result-date">@m.MatchDate.ToString("dd MMM")</MudText>
+                </div>
+            }
+        </MudStack>
+    }
+</MudContainer>
+
+@code {
+    private List<Match>? _recentMatches;
+    private int _wins, _draws, _losses, _goalsFor, _goalsAgainst;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var finished = await MatchService.GetFinishedAsync();
+        _recentMatches = finished.Take(5).ToList();
+        _wins = finished.Count(m => m.Result == EMatchResult.W);
+        _draws = finished.Count(m => m.Result == EMatchResult.D);
+        _losses = finished.Count(m => m.Result == EMatchResult.L);
+        _goalsFor = finished.Sum(m => m.GoalsFor ?? 0);
+        _goalsAgainst = finished.Sum(m => m.GoalsAgainst ?? 0);
+    }
+
+    private static string ResultChipClass(EMatchResult? r) => r switch
+    {
+        EMatchResult.W => "ttf-chip--win",
+        EMatchResult.D => "ttf-chip--draw",
+        EMatchResult.L => "ttf-chip--loss",
+        _ => ""
+    };
+}

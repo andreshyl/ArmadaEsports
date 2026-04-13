@@ -1,0 +1,191 @@
+@inject IAttributeService AttributeService
+
+<MudDialog>
+    <TitleContent>
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+            <MudAvatar Class="psd__avatar">
+                @Player.Alias[..Math.Min(2, Player.Alias.Length)].ToUpper()
+            </MudAvatar>
+            <div>
+                <MudText Typo="Typo.h6" Class="psd__name">@Player.Alias</MudText>
+                <MudText Typo="Typo.caption" Class="psd__meta">
+                    @Player.PrimaryPosition?.NameEs &nbsp;·&nbsp; #@Player.JerseyNumber
+                </MudText>
+            </div>
+        </MudStack>
+    </TitleContent>
+    <DialogContent>
+        <MudTabs Elevation="0" Color="Color.Warning">
+
+            <MudTabPanel Text="STATS">
+                @if (!_matchStats.Any())
+                {
+                    <MudText Typo="Typo.body2" Class="psd__no-data">No match stats recorded.</MudText>
+                }
+                else
+                {
+                    <MudTable T="MatchPerformanceStat" Items="_matchStats" Dense="true" Elevation="0">
+                        <HeaderContent>
+                            <MudTh>Match</MudTh>
+                            <MudTh>⚽</MudTh><MudTh>🅰</MudTh>
+                            <MudTh>Pass%</MudTh><MudTh>Shot%</MudTh><MudTh>Rating</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd>
+                                <MudText Typo="Typo.body2" Class="psd__match-label">vs @context.Match?.OpponentName</MudText>
+                                <MudText Typo="Typo.caption" Class="psd__match-date">@context.Match?.MatchDate.ToString("dd MMM")</MudText>
+                            </MudTd>
+                            <MudTd>@context.Goals</MudTd>
+                            <MudTd>@context.Assists</MudTd>
+                            <MudTd>@(context.PassAccuracyPct?.ToString("F0") ?? "-")%</MudTd>
+                            <MudTd>@(context.ShotAccuracyPct?.ToString("F0") ?? "-")%</MudTd>
+                            <MudTd><MudChip T="string" Size="Size.Small" Class="ttf-chip--gold">@(context.MatchRating?.ToString("F1") ?? "-")</MudChip></MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                }
+            </MudTabPanel>
+
+            <MudTabPanel Text="MENTAL">
+                @if (!_snapshots.Any())
+                {
+                    <MudText Typo="Typo.body2" Class="psd__no-data">No attribute snapshots recorded.</MudText>
+                }
+                else
+                {
+                    @* Average bars across all snapshots *@
+                    <MudText Typo="Typo.caption" Class="psd__section-label">
+                        PROMEDIO — @_snapshots.Count snapshot(s)
+                    </MudText>
+
+                    <MudGrid Spacing="3" Class="mb-4">
+                        @for (int i = 0; i < _attrNames.Length; i++)
+                        {
+                            var idx = i;
+                            var name = _attrNames[idx];
+                            var score = _avgScores[idx];
+                            <MudItem xs="12" sm="6">
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudText Typo="Typo.body2" Class="psd__attr-name">@name</MudText>
+                                    <MudProgressLinear Value="@((double)(score * 10))" Color="Color.Warning"
+                                                       Rounded="true" Size="Size.Medium" Style="flex:1;" />
+                                    <MudText Typo="Typo.body2" Class="psd__attr-score">@score.ToString("F1")</MudText>
+                                </MudStack>
+                            </MudItem>
+                        }
+                    </MudGrid>
+
+                    <MudDivider Class="mb-3" />
+                    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-3">
+                        <MudText Typo="Typo.caption" Class="psd__section-label">OVERALL PROMEDIO</MudText>
+                        <MudChip T="string" Class="ttf-chip--gold">@_avgOverall.ToString("F1")</MudChip>
+                    </MudStack>
+
+                    @* Individual snapshots with delete *@
+                    <MudDivider Class="mb-3" />
+                    <MudText Typo="Typo.caption" Class="psd__section-label">SNAPSHOTS INDIVIDUALES</MudText>
+
+                    @foreach (var snap in _snapshots)
+                    {
+                        <div class="psd__snapshot-row">
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                                <div>
+                                    <MudText Typo="Typo.body2" Class="psd__match-label">
+                                        @snap.SnapshotDate.ToString("dd MMM yyyy")
+                                    </MudText>
+                                    @if (!string.IsNullOrEmpty(snap.Notes))
+                                    {
+                                        <MudText Typo="Typo.caption" Class="psd__snapshot-date">@snap.Notes</MudText>
+                                    }
+                                </div>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudChip T="string" Size="Size.Small" Class="ttf-chip--gold">
+                                        @snap.OverallRating.ToString("F1")
+                                    </MudChip>
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                   Size="Size.Small"
+                                                   Color="Color.Error"
+                                                   OnClick="@(() => DeleteSnapshot(snap.Id))" />
+                                </MudStack>
+                            </MudStack>
+                        </div>
+                    }
+                }
+            </MudTabPanel>
+
+            <MudTabPanel Text="HISTORY">
+                @if (!_matchStats.Any())
+                {
+                    <MudText Typo="Typo.body2" Class="psd__no-data">No match history.</MudText>
+                }
+                else
+                {
+                    <MudStack Spacing="2">
+                        @foreach (var s in _matchStats)
+                        {
+                            <div class="psd__history-row">
+                                <MudChip T="string" Size="Size.Small" Class="@ResultChipClass(s.Match?.Result)">
+                                    @s.Match?.Result?.ToString()
+                                </MudChip>
+                                <div class="psd__history-opponent">
+                                    <MudText Typo="Typo.body2" Class="psd__match-label">vs @s.Match?.OpponentName</MudText>
+                                    <MudText Typo="Typo.caption" Class="psd__history-date">@s.Match?.MatchDate.ToString("dd MMM yyyy")</MudText>
+                                </div>
+                                <MudText Typo="Typo.body2">⚽ @s.Goals &nbsp; 🅰 @s.Assists</MudText>
+                            </div>
+                        }
+                    </MudStack>
+                }
+            </MudTabPanel>
+        </MudTabs>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => MudDialog.Close(DialogResult.Ok(true)))" Variant="Variant.Text">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+    [Parameter] public Player Player { get; set; } = null!;
+
+    private List<MatchPerformanceStat> _matchStats = [];
+    private List<PlayerAttributeSnapshot> _snapshots = [];
+    private decimal[] _avgScores = new decimal[10];
+    private decimal _avgOverall;
+
+    private static readonly string[] _attrNames =
+    [
+        "Comunicación", "Juego en Equipo", "Posicionamiento", "Decisiones",
+        "Reacción",     "Creatividad",     "Consistencia",    "Adaptabilidad",
+        "Precisión",    "Compostura"
+    ];
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _matchStats = Player.PerformanceStats
+            .OrderByDescending(s => s.Match?.MatchDate)
+            .ToList();
+        await LoadSnapshots();
+    }
+
+    private async Task LoadSnapshots()
+    {
+        _snapshots = await AttributeService.GetSnapshotsByPlayerAsync(Player.Id);
+        _avgScores = AttributeService.ComputeAverageScores(_snapshots);
+        _avgOverall = AttributeService.ComputeAverageOverall(_snapshots);
+    }
+
+    private async Task DeleteSnapshot(int id)
+    {
+        await AttributeService.DeleteSnapshotAsync(id);
+        await LoadSnapshots();
+        StateHasChanged();
+    }
+
+    private static string ResultChipClass(EMatchResult? r) => r switch
+    {
+        EMatchResult.W => "ttf-chip--win",
+        EMatchResult.D => "ttf-chip--draw",
+        EMatchResult.L => "ttf-chip--loss",
+        _ => ""
+    };
+}

@@ -1,0 +1,74 @@
+<MudDialog>
+    <TitleContent>
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3">
+            <MudChip T="string" Class="@ResultChipClass(Match.Result, Match.Status)">
+                @(Match.Status == EMatchStatus.Upcoming ? "Upcoming" : Match.Result?.ToString())
+            </MudChip>
+            <div>
+                <MudText Typo="Typo.h6" Class="mdd__title">TTF Esports vs @Match.OpponentName</MudText>
+                <MudText Typo="Typo.caption" Class="mdd__meta">
+                    @Match.MatchdayLabel &nbsp;·&nbsp;
+                    @(Match.Venue == EVenue.Home ? "Home" : "Away") &nbsp;·&nbsp;
+                    @Match.MatchDate.ToString("dd MMM yyyy")
+                </MudText>
+            </div>
+            @if (Match.Status == EMatchStatus.Finished)
+            {
+                <MudSpacer />
+                <MudText Typo="Typo.h4" Class="mdd__score">@Match.GoalsFor — @Match.GoalsAgainst</MudText>
+            }
+        </MudStack>
+    </TitleContent>
+    <DialogContent>
+        @if (!Match.PerformanceStats.Any())
+        {
+            <MudText Typo="Typo.body2" Class="mdd__no-data">No player stats recorded for this match.</MudText>
+        }
+        else
+        {
+            <MudTable T="MatchPerformanceStat" Items="Match.PerformanceStats.OrderByDescending(s => s.MatchRating)"
+                      Dense="true" Elevation="0">
+                <HeaderContent>
+                    <MudTh>Player</MudTh>
+                    <MudTh>Pos</MudTh>
+                    <MudTh>⚽</MudTh><MudTh>🅰</MudTh>
+                    <MudTh>Pass%</MudTh><MudTh>Shot%</MudTh>
+                    <MudTh>Tackles</MudTh><MudTh>Intercept</MudTh><MudTh>Saves</MudTh>
+                    <MudTh>Rating</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd><MudText Typo="Typo.body2" Class="mdd__player-alias">@context.Player?.Alias</MudText></MudTd>
+                    <MudTd><MudChip T="string" Size="Size.Small" Class="ttf-chip--dark">@context.Player?.PrimaryPosition?.Code</MudChip></MudTd>
+                    <MudTd>@context.Goals</MudTd>
+                    <MudTd>@context.Assists</MudTd>
+                    <MudTd>@(context.PassAccuracyPct?.ToString("F0") ?? "-")%</MudTd>
+                    <MudTd>@(context.ShotAccuracyPct?.ToString("F0") ?? "-")%</MudTd>
+                    <MudTd>@context.TacklesWon / @context.Tackles</MudTd>
+                    <MudTd>@context.Interceptions</MudTd>
+                    <MudTd>@context.Saves</MudTd>
+                    <MudTd><MudChip T="string" Size="Size.Small" Class="ttf-chip--gold">@(context.MatchRating?.ToString("F1") ?? "-")</MudChip></MudTd>
+                </RowTemplate>
+            </MudTable>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => MudDialog.Close(DialogResult.Ok(true)))" Variant="Variant.Text">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+    [Parameter] public Match Match { get; set; } = null!;
+
+    private static string ResultChipClass(EMatchResult? r, EMatchStatus status)
+    {
+        if (status == EMatchStatus.Upcoming) return "";
+        return r switch
+        {
+            EMatchResult.W => "ttf-chip--win",
+            EMatchResult.D => "ttf-chip--draw",
+            EMatchResult.L => "ttf-chip--loss",
+            _ => ""
+        };
+    }
+}

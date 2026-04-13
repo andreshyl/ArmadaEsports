@@ -1,0 +1,24 @@
+.calendario__upcoming-card {
+  background: var(--ttf-white);
+  border-radius: var(--ttf-radius-md);
+  border: 0.5px solid var(--ttf-border);
+  border-left: 3px solid var(--ttf-gold);
+  padding: 14px 16px;
+}
+
+.calendario__upcoming-date     { color: var(--ttf-gold) !important; letter-spacing: 1px !important; font-weight: 600 !important; }
+.calendario__upcoming-opponent  { font-weight: 700 !important; margin: 4px 0 !important; }
+.calendario__upcoming-meta      { color: var(--ttf-grey) !important; margin-top: 4px !important; }
+
+.calendario__finished-card {
+  background: var(--ttf-white);
+  border-radius: var(--ttf-radius-md);
+  border: 0.5px solid var(--ttf-border);
+  border-left: 3px solid var(--ttf-border);
+  padding: 14px 16px;
+}
+
+.calendario__finished-date     { color: var(--ttf-grey) !important; letter-spacing: 1px !important; }
+.calendario__finished-opponent { font-weight: 700 !important; flex: 1; }
+.calendario__finished-score    { font-weight: 800 !important; }
+.calendario__finished-meta     { color: var(--ttf-grey) !important; }

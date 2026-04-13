@@ -1,0 +1,17 @@
+.partidos__match-row {
+  background: var(--ttf-white);
+  border-radius: var(--ttf-radius-md);
+  border: 1px solid var(--ttf-border);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.partidos__match-row:hover  { border-color: var(--ttf-gold); }
+.partidos__opponent         { flex: 1; font-weight: 600 !important; }
+.partidos__meta             { color: var(--ttf-grey) !important; }
+.partidos__score            { font-weight: 700 !important; }
+.partidos__upcoming-date    { color: var(--ttf-grey) !important; }

@@ -1,0 +1,131 @@
+﻿@inject IMatchService MatchService
+@inject IPlayerService PlayerService
+
+<MudDialog>
+    <DialogContent>
+        <MudStack Spacing="3">
+            <MudSelect T="int" @bind-Value="_matchId" Label="Match" Variant="Variant.Outlined" FullWidth="true"
+                       @bind-Value:after="OnMatchSelected">
+                @foreach (var m in Matches.Where(m => m.Status == EMatchStatus.Finished))
+                {
+                    <MudSelectItem T="int" Value="@m.Id">
+                        @m.MatchDate.ToString("dd MMM") — vs @m.OpponentName
+                    </MudSelectItem>
+                }
+            </MudSelect>
+
+            @if (_matchId > 0)
+            {
+                <MudSelect T="int" @bind-Value="_playerId" Label="Player" Variant="Variant.Outlined" FullWidth="true">
+                    @foreach (var p in _players)
+                    {
+                        <MudSelectItem T="int" Value="@p.Id">@p.Alias (@p.PrimaryPosition?.Code)</MudSelectItem>
+                    }
+                </MudSelect>
+
+                <MudDivider />
+
+                <MudGrid Spacing="2">
+                    <MudItem xs="6">
+                        <MudNumericField T="int" @bind-Value="_goals" Label="Goles" Variant="Variant.Outlined" FullWidth="true" Min="0" />
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudNumericField T="int" @bind-Value="_assists" Label="Asistencias" Variant="Variant.Outlined" FullWidth="true" Min="0" />
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudNumericField T="decimal" @bind-Value="_passAccuracy" Label="Pase %" Variant="Variant.Outlined" FullWidth="true" Min="0" Max="100" />
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudNumericField T="decimal" @bind-Value="_shotAccuracy" Label="Tiro %" Variant="Variant.Outlined" FullWidth="true" Min="0" Max="100" />
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudNumericField T="int" @bind-Value="_tackles" Label="Entradas" Variant="Variant.Outlined" FullWidth="true" Min="0" />
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudNumericField T="int" @bind-Value="_tacklesWon" Label="Entradas Ganadas" Variant="Variant.Outlined" FullWidth="true" Min="0" />
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudNumericField T="int" @bind-Value="_interceptions" Label="Intercepciones" Variant="Variant.Outlined" FullWidth="true" Min="0" />
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudNumericField T="int" @bind-Value="_saves" Label="Paradas" Variant="Variant.Outlined" FullWidth="true" Min="0" />
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudNumericField T="decimal" @bind-Value="_matchRating" Label="Rating (0-10)" Variant="Variant.Outlined" FullWidth="true" Min="0" Max="10" Step="0.1m" />
+                    </MudItem>
+                </MudGrid>
+
+                @if (_error is not null)
+                {
+                    <MudText Typo="Typo.caption" Color="Color.Error">@_error</MudText>
+                }
+            }
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => MudDialog.Cancel())" Variant="Variant.Text">Cancel</MudButton>
+        <MudButton OnClick="Save" Variant="Variant.Filled" Color="Color.Warning"
+                   Disabled="@(_matchId == 0 || _playerId == 0 || _saving)">
+            Save
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+    [Parameter] public List<Match> Matches { get; set; } = [];
+
+    private List<Player> _players = [];
+    private int _matchId;
+    private int _playerId;
+    private int _goals;
+    private int _assists;
+    private decimal _passAccuracy;
+    private decimal _shotAccuracy;
+    private int _tackles;
+    private int _tacklesWon;
+    private int _interceptions;
+    private int _saves;
+    private decimal _matchRating;
+    private string? _error;
+    private bool _saving;
+
+    protected override async Task OnInitializedAsync() =>
+        _players = await PlayerService.GetAllAsync();
+
+    private void OnMatchSelected() { /* reset if needed */ }
+
+    private async Task Save()
+    {
+        _error = null;
+        _saving = true;
+        try
+        {
+            await MatchService.AddPerformanceStatAsync(new MatchPerformanceStat
+            {
+                MatchId = _matchId,
+                PlayerId = _playerId,
+                Goals = (byte)_goals,
+                Assists = (byte)_assists,
+                PassAccuracyPct = _passAccuracy,
+                ShotAccuracyPct = _shotAccuracy,
+                Tackles = (byte)_tackles,
+                TacklesWon = (byte)_tacklesWon,
+                Interceptions = (byte)_interceptions,
+                Saves = (byte)_saves,
+                MatchRating = _matchRating,
+                IsAiParsed = false,
+                ConfirmedAt = DateTime.UtcNow,
+            });
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            _error = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+}

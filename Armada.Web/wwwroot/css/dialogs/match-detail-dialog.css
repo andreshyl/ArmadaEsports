@@ -1,0 +1,5 @@
+.mdd__score       { font-weight: 800 !important; color: var(--ttf-gold) !important; }
+.mdd__title       { font-weight: 700 !important; }
+.mdd__meta        { color: var(--ttf-grey) !important; }
+.mdd__no-data     { color: var(--ttf-grey) !important; padding: 16px 0 !important; }
+.mdd__player-alias { font-weight: 600 !important; }

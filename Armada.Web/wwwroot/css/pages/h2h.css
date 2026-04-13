@@ -1,0 +1,19 @@
+.h2h__vs-label            { font-weight: 800 !important; color: var(--ttf-gold) !important; }
+.h2h__attr-val--winner    { font-weight: 700 !important; color: var(--ttf-gold) !important; }
+.h2h__attr-val--loser     { color: var(--ttf-grey) !important; }
+.h2h__overall-value       { font-weight: 800 !important; color: var(--ttf-gold) !important; }
+.h2h__overall-label       { color: var(--ttf-grey) !important; letter-spacing: 1px !important; }
+.h2h__overall-alias       { color: var(--ttf-grey) !important; }
+.h2h__separator           { color: var(--ttf-grey) !important; }
+
+.h2h__perf-card {
+  background: var(--ttf-white);
+  border-radius: var(--ttf-radius-md);
+  border: 1px solid var(--ttf-border);
+  padding: 12px;
+  text-align: center;
+}
+
+.h2h__perf-label      { color: var(--ttf-grey) !important; letter-spacing: 1px !important; display: block !important; margin-bottom: 4px !important; }
+.h2h__perf-val--winner { font-weight: 800 !important; color: var(--ttf-gold) !important; }
+.h2h__perf-val--loser  { font-weight: 500 !important; color: var(--ttf-black) !important; }

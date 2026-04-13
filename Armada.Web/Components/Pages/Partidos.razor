@@ -1,0 +1,98 @@
+@page "/partidos"
+@inject ICompetitionService CompetitionService
+@inject IMatchService MatchService
+@inject IDialogService DialogService
+
+<PageTitle>Partidos — TTF Esports</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="ttf-page">
+    <MudText Typo="Typo.overline" Class="ttf-section-label">PARTIDOS</MudText>
+
+    @if (_competitions is null)
+    {
+        <MudProgressLinear Color="Color.Warning" Indeterminate="true" />
+    }
+    else if (!_competitions.Any())
+    {
+        <MudText Typo="Typo.body2">No competitions found.</MudText>
+    }
+    else
+    {
+        <MudTabs @bind-ActivePanelIndex="_activeTab" Elevation="0" Color="Color.Warning">
+            @foreach (var comp in _competitions)
+            {
+                <MudTabPanel Text="@comp.Name.ToUpperInvariant()">
+                    @if (_matchesByComp.TryGetValue(comp.Id, out var matches) && matches.Any())
+                    {
+                        <MudStack Spacing="2" Class="mt-4">
+                            @foreach (var m in matches)
+                            {
+                                <div class="partidos__match-row" @onclick="() => OpenMatch(m)">
+                                    <MudChip T="string" Size="Size.Small" Class="@ResultChipClass(m.Result, m.Status)">
+                                        @(m.Status == EMatchStatus.Upcoming ? "—" : m.Result?.ToString())
+                                    </MudChip>
+                                    <div>
+                                        <MudText Typo="Typo.body1" Class="partidos__opponent">vs @m.OpponentName</MudText>
+                                        <MudText Typo="Typo.caption" Class="partidos__meta">
+                                            @m.MatchdayLabel &nbsp;·&nbsp; @(m.Venue == EVenue.Home ? "Home" : "Away")
+                                        </MudText>
+                                    </div>
+                                    <MudSpacer />
+                                    @if (m.Status == EMatchStatus.Finished)
+                                    {
+                                        <MudText Typo="Typo.h6" Class="partidos__score">@m.GoalsFor — @m.GoalsAgainst</MudText>
+                                    }
+                                    else
+                                    {
+                                        <MudText Typo="Typo.body2" Class="partidos__upcoming-date">@m.MatchDate.ToString("dd MMM HH:mm")</MudText>
+                                    }
+                                </div>
+                            }
+                        </MudStack>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body2" Class="mt-4">No matches in this competition.</MudText>
+                    }
+                </MudTabPanel>
+            }
+        </MudTabs>
+    }
+</MudContainer>
+
+@code {
+    private List<Competition>? _competitions;
+    private Dictionary<int, List<Match>> _matchesByComp = new();
+    private int _activeTab;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _competitions = await CompetitionService.GetAllAsync();
+        foreach (var c in _competitions)
+            _matchesByComp[c.Id] = await MatchService.GetByCompetitionAsync(c.Id);
+    }
+
+    private async Task OpenMatch(Match match)
+    {
+        var parameters = new DialogParameters
+        {
+            { "Match", match }
+        };
+        await DialogService.ShowAsync<MatchDetailDialog>(
+            $"vs {match.OpponentName}",
+            parameters,
+            new DialogOptions { MaxWidth = MaxWidth.Large, FullWidth = true, CloseButton = true });
+    }
+
+    private static string ResultChipClass(EMatchResult? r, EMatchStatus status)
+    {
+        if (status == EMatchStatus.Upcoming) return "";
+        return r switch
+        {
+            EMatchResult.W => "ttf-chip--win",
+            EMatchResult.D => "ttf-chip--draw",
+            EMatchResult.L => "ttf-chip--loss",
+            _ => ""
+        };
+    }
+}

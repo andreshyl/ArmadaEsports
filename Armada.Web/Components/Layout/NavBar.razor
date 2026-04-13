@@ -1,0 +1,66 @@
+@inject NavigationManager Nav
+@inject TtfAuthStateProvider AuthProvider
+@implements IDisposable
+
+<MudAppBar Class="ttf-nav" Elevation="2" Dense="false">
+
+    <MudButton Variant="Variant.Text" DisableElevation="true" OnClick="GoHome" Class="ttf-nav__logo-btn">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+            <img class="ttf-nav__logo" src="@AssetExtensions.TeamLogo()" alt="TTF" />
+            <MudText Typo="Typo.h6" Class="ttf-nav__brand">TTF ESPORTS</MudText>
+        </MudStack>
+    </MudButton>
+
+    <div class="ttf-nav__links">
+        <MudButton Variant="Variant.Text" Class="@NavClass("/plantilla")" DisableElevation="true" OnClick="GoPlantilla">PLANTILLA</MudButton>
+        <MudButton Variant="Variant.Text" Class="@NavClass("/partidos")" DisableElevation="true" OnClick="GoPartidos">PARTIDOS</MudButton>
+        <MudButton Variant="Variant.Text" Class="@NavClass("/calendario")" DisableElevation="true" OnClick="GoCalendario">CALENDARIO</MudButton>
+        <MudButton Variant="Variant.Text" Class="@NavClass("/h2h")" DisableElevation="true" OnClick="GoH2H">H2H</MudButton>
+    </div>
+
+    <MudSpacer />
+
+    <AuthorizeView>
+        <Authorized>
+            <MudTooltip Text="Dashboard" Arrow="true" Placement="Placement.Bottom">
+                <MudIconButton Icon="@Icons.Material.Filled.Dashboard"
+                               OnClick="GoManager"
+                               Class="ttf-nav__icon-btn"
+                               Size="Size.Medium" />
+            </MudTooltip>
+        </Authorized>
+        <NotAuthorized>
+            <MudTooltip Text="Manager Login" Arrow="true" Placement="Placement.Bottom">
+                <MudIconButton Icon="@Icons.Material.Filled.AdminPanelSettings"
+                               OnClick="GoLogin"
+                               Class="ttf-nav__icon-btn"
+                               Size="Size.Medium" />
+            </MudTooltip>
+        </NotAuthorized>
+    </AuthorizeView>
+
+</MudAppBar>
+
+@code {
+    protected override void OnInitialized() =>
+        Nav.LocationChanged += OnLocationChanged;
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e) =>
+        InvokeAsync(StateHasChanged);
+
+    public void Dispose() =>
+        Nav.LocationChanged -= OnLocationChanged;
+
+    private string NavClass(string href) =>
+        Nav.Uri.Contains(href, StringComparison.OrdinalIgnoreCase)
+            ? "ttf-nav__link ttf-nav__link--active"
+            : "ttf-nav__link";
+
+    private void GoHome() => Nav.NavigateTo("/");
+    private void GoPlantilla() => Nav.NavigateTo("/plantilla");
+    private void GoPartidos() => Nav.NavigateTo("/partidos");
+    private void GoCalendario() => Nav.NavigateTo("/calendario");
+    private void GoH2H() => Nav.NavigateTo("/h2h");
+    private void GoLogin() => Nav.NavigateTo("/manager/login");
+    private void GoManager() => Nav.NavigateTo("/manager");
+}

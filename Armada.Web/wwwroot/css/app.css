@@ -1,0 +1,68 @@
+/* ── TTF ESPORTS — SHARED TOKENS & UTILITIES ── */
+
+:root {
+  --ttf-black:      #1A1A1A;
+  --ttf-grey:       #8C8C8C;
+  --ttf-gold:       #C9A84C;
+  --ttf-off-white:  #F5F2EB;
+  --ttf-white:      #FFFFFF;
+  --ttf-border:     #E0DAD0;
+  --ttf-green:      #22c55e;
+  --ttf-red:        #ef4444;
+
+  --ttf-radius-sm:  4px;
+  --ttf-radius-md:  8px;
+  --ttf-radius-lg:  12px;
+
+  --ttf-font-display: 'Bebas Neue', 'Oswald', sans-serif;
+  --ttf-font-body:    'IBM Plex Sans', sans-serif;
+
+  --ttf-label-spacing: 3px;
+}
+
+/* ── UTILITIES ── */
+.ttf-page {
+  padding: 32px 24px;
+  background: var(--ttf-off-white);
+  min-height: 100vh;
+}
+
+.ttf-section-label {
+  display: block;
+  color: var(--ttf-gold);
+  letter-spacing: var(--ttf-label-spacing);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  margin-bottom: 24px;
+}
+
+.ttf-subsection-label {
+  display: block;
+  color: var(--ttf-grey);
+  letter-spacing: 2px;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  margin-bottom: 16px;
+}
+
+.ttf-card {
+  background: var(--ttf-white);
+  border-radius: var(--ttf-radius-md);
+  border: 1px solid var(--ttf-border);
+}
+
+.ttf-card--gold-accent {
+  border-left: 3px solid var(--ttf-gold);
+}
+
+.ttf-card--grey-accent {
+  border-left: 3px solid var(--ttf-border);
+}
+
+.ttf-chip--win  { background: var(--ttf-green) !important; color: #fff !important; }
+.ttf-chip--draw { background: var(--ttf-grey)  !important; color: #fff !important; }
+.ttf-chip--loss { background: var(--ttf-red)   !important; color: #fff !important; }
+.ttf-chip--gold { background: var(--ttf-gold)  !important; color: var(--ttf-black) !important; font-weight: 700 !important; }
+.ttf-chip--dark { background: var(--ttf-black) !important; color: var(--ttf-gold)  !important; }

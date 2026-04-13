@@ -1,0 +1,172 @@
+@using Microsoft.AspNetCore.Components.Forms
+@inject IAiParserService AiParserService
+@inject IPlayerService PlayerService
+
+<MudDialog>
+    <DialogContent>
+        <MudStack Spacing="3">
+            <MudSelect T="int" @bind-Value="_matchId" Label="Match" Variant="Variant.Outlined" FullWidth="true">
+                @foreach (var m in Matches.Where(m => m.Status == EMatchStatus.Finished))
+                {
+                    <MudSelectItem T="int" Value="@m.Id">@m.MatchDate.ToString("dd MMM") — vs @m.OpponentName</MudSelectItem>
+                }
+            </MudSelect>
+
+            <InputFile id="ttf-file-input" OnChange="OnFilesSelected" accept="image/*" multiple style="display:none;" />
+            <label for="ttf-file-input" style="width:100%;">
+                <MudButton Variant="Variant.Outlined" Color="Color.Default" FullWidth="true"
+                           StartIcon="@Icons.Material.Filled.Image" Style="pointer-events:none;">
+                    @(_images.Count == 0 ? "Select screenshot(s)" : $"{_images.Count} image(s) selected")
+                </MudButton>
+            </label>
+
+            @if (_images.Count > 0)
+            {
+                <MudStack Spacing="1">
+                    @foreach (var img in _images)
+                    {
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                            <MudIcon Icon="@Icons.Material.Filled.Image" Size="Size.Small" />
+                            <MudText Typo="Typo.caption" Style="flex:1">@img.Name</MudText>
+                            <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small"
+                                           OnClick="@(() => RemoveImage(img))" />
+                        </MudStack>
+                    }
+                </MudStack>
+            }
+
+            <MudButton Variant="Variant.Filled" Color="Color.Warning" FullWidth="true"
+                       Disabled="@(_images.Count == 0 || _matchId == 0 || _parsing)"
+                       OnClick="Parse">
+                @(_parsing ? $"Analysing {_currentIndex}/{_images.Count}..." : "Extract Stats with AI")
+            </MudButton>
+
+            @if (_error is not null)
+            {
+                <MudText Typo="Typo.caption" Color="Color.Error">@_error</MudText>
+            }
+
+            @if (_jobs.Any(j => j.ParseStatus == EAiParseStatus.Failed))
+            {
+                @foreach (var failed in _jobs.Where(j => j.ParseStatus == EAiParseStatus.Failed))
+                {
+                    <MudAlert Severity="Severity.Error" Dense="true">AI parse failed: @failed.ErrorMessage</MudAlert>
+                }
+            }
+
+            @if (_allRows.Any())
+            {
+                <MudDivider />
+                <MudText Typo="Typo.caption" Class="aud__rows-label">
+                    @_allRows.Count rows extracted — review before confirming:
+                </MudText>
+                @foreach (var row in _allRows)
+                {
+                    <div class="aud__row">
+                        <MudSelect T="int?" @bind-Value="row.PlayerId" Label="Player"
+                                   Variant="Variant.Outlined" Dense="true" Class="aud__row-select">
+                            @foreach (var p in _players)
+                            {
+                                <MudSelectItem T="int?" Value="@((int?)p.Id)">@p.Alias</MudSelectItem>
+                            }
+                        </MudSelect>
+                        <MudText Typo="Typo.caption" Class="aud__row-alias">@row.RawAlias</MudText>
+                        <MudChip T="string" Size="Size.Small" Class="@ConfidenceClass(row.AiConfidenceScore)">
+                            @((row.AiConfidenceScore * 100).ToString("F0"))%
+                        </MudChip>
+                    </div>
+                }
+                <MudButton Variant="Variant.Filled" Color="Color.Warning" FullWidth="true"
+                           OnClick="@(async () => await Confirm())">
+                    Confirm & Save
+                </MudButton>
+            }
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => MudDialog.Close(DialogResult.Ok(true)))" Variant="Variant.Text">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+    [Parameter] public List<Match> Matches { get; set; } = [];
+
+    private List<Player> _players = [];
+    private int _matchId;
+    private bool _parsing;
+    private int _currentIndex;
+    private string? _error;
+
+    private record ImageEntry(string Name, string Base64, string MimeType);
+    private List<ImageEntry> _images = [];
+    private List<AiMatchParseJob> _jobs = [];
+    private List<AiParseJobRow> _allRows = [];
+
+    protected override async Task OnInitializedAsync() =>
+        _players = await PlayerService.GetAllAsync();
+
+    private async Task OnFilesSelected(InputFileChangeEventArgs e)
+    {
+        foreach (var file in e.GetMultipleFiles(20))
+        {
+            using var ms = new MemoryStream();
+            await file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024).CopyToAsync(ms);
+            _images.Add(new ImageEntry(file.Name, Convert.ToBase64String(ms.ToArray()), file.ContentType));
+        }
+    }
+
+    private void RemoveImage(ImageEntry img) => _images.Remove(img);
+
+    private async Task Parse()
+    {
+        if (_images.Count == 0 || _matchId == 0) return;
+        _error = null;
+        _jobs.Clear();
+        _allRows.Clear();
+        _parsing = true;
+
+        for (int i = 0; i < _images.Count; i++)
+        {
+            _currentIndex = i + 1;
+            StateHasChanged();
+            try
+            {
+                var job = await AiParserService.SubmitImageAsync(_matchId, _images[i].Base64, _images[i].MimeType);
+                _jobs.Add(job);
+                if (job.ParseStatus == EAiParseStatus.Parsed)
+                    _allRows.AddRange(job.Rows);
+            }
+            catch (Exception ex)
+            {
+                _error = $"Image {i + 1}: {ex.Message}";
+            }
+        }
+
+        // Deduplicate rows by RawAlias — keep highest confidence per alias
+        _allRows = _allRows
+            .GroupBy(r => r.RawAlias?.ToLower())
+            .Select(g => g.OrderByDescending(r => r.AiConfidenceScore).First())
+            .ToList();
+
+        _parsing = false;
+    }
+
+    private async Task Confirm()
+    {
+        foreach (var job in _jobs.Where(j => j.ParseStatus == EAiParseStatus.Parsed))
+        {
+            var rows = _allRows.Where(r => r.JobId == job.Id).ToList();
+            if (rows.Any())
+                await AiParserService.ConfirmJobAsync(job.Id, rows);
+        }
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+
+    private static string ConfidenceClass(decimal score) => score switch
+    {
+        >= 0.8m => "ttf-chip--win",
+        >= 0.5m => "aud__conf-medium",
+        _ => "ttf-chip--loss"
+    };
+}

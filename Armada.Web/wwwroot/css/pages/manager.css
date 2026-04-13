@@ -1,0 +1,71 @@
+.manager__login-wrap {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ttf-off-white);
+}
+
+.manager__login-card {
+  background: var(--ttf-white);
+  border: 1px solid var(--ttf-border);
+  border-radius: var(--ttf-radius-lg);
+  padding: 40px 32px;
+  width: 100%;
+  max-width: 360px;
+  text-align: center;
+}
+
+.manager__login-logo {
+  height: 64px;
+  width: 64px;
+  object-fit: contain;
+  margin-bottom: 16px;
+}
+
+.manager__login-title {
+  color: var(--ttf-black);
+  font-weight: 700;
+  letter-spacing: 3px;
+  margin-bottom: 24px;
+  display: block;
+}
+
+.manager__login-error {
+  color: var(--ttf-red);
+  display: block;
+  margin-bottom: 8px;
+}
+
+.manager__section-card {
+  background: var(--ttf-white);
+  border: 1px solid var(--ttf-border);
+  border-radius: var(--ttf-radius-md);
+  padding: 20px;
+}
+
+.manager__section-title {
+  color: var(--ttf-gold);
+  letter-spacing: 2px;
+  font-weight: 600;
+}
+
+.manager__player-alias { font-weight: 600; }
+.manager__match-opponent { font-weight: 600; }
+
+.manager__comp-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 0.5px solid var(--ttf-border);
+}
+
+.manager__comp-row:last-child { border-bottom: none; }
+
+.manager__comp-name {
+  flex: 1;
+  font-weight: 500;
+}
+
+.manager__login-success { color: var(--ttf-green); display: block; margin-bottom: 8px; }

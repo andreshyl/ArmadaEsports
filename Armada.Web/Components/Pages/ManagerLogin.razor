@@ -1,0 +1,67 @@
+@page "/manager/login"
+@inject IAuthService AuthService
+@inject TtfAuthStateProvider AuthProvider
+@inject NavigationManager Nav
+
+<PageTitle>Login — TTF Esports</PageTitle>
+
+<div class="manager__login-wrap">
+    <div class="manager__login-card">
+        <img class="manager__login-logo" src="@AssetExtensions.TeamLogo()" alt="TTF" />
+        <MudText Typo="Typo.h6" Class="manager__login-title">MANAGER ACCESS</MudText>
+
+        <MudStack Spacing="3">
+            <MudTextField @bind-Value="_username" Label="Username" Variant="Variant.Outlined" FullWidth="true" />
+            <MudTextField @bind-Value="_password" Label="Password" InputType="InputType.Password"
+                          Variant="Variant.Outlined" FullWidth="true" OnKeyDown="OnKeyDown" />
+
+            @if (_error is not null)
+            {
+                <MudText Typo="Typo.caption" Class="manager__login-error">@_error</MudText>
+            }
+
+            <MudButton Variant="Variant.Filled" Color="Color.Warning"
+                       FullWidth="true" OnClick="Login" Disabled="_loading">
+                @(_loading ? "..." : "ENTER")
+            </MudButton>
+
+            <MudButton Variant="Variant.Text" Color="Color.Default"
+                       FullWidth="true" Href="/manager/register">
+                Create account
+            </MudButton>
+        </MudStack>
+    </div>
+</div>
+
+@code {
+    private string _username = string.Empty;
+    private string _password = string.Empty;
+    private string? _error;
+    private bool _loading;
+
+    private async Task Login()
+    {
+        _error = null;
+        _loading = true;
+        try
+        {
+            var user = await AuthService.LoginAsync(_username, _password);
+            if (user is null) { _error = "Invalid username or password."; return; }
+            await AuthProvider.LoginAsync(user.Id);
+            Nav.NavigateTo("/manager");
+        }
+        catch (Exception ex)
+        {
+            _error = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void OnKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") _ = Login();
+    }
+}

@@ -1,0 +1,47 @@
+@inject IMatchService MatchService
+
+<MudDialog>
+    <DialogContent>
+        <MudStack Spacing="3">
+            <MudText Typo="Typo.body1">
+                TTF Esports vs <strong>@Match.OpponentName</strong>
+            </MudText>
+            <MudGrid Spacing="2">
+                <MudItem xs="6">
+                    <MudNumericField T="int" @bind-Value="_goalsFor" Label="TTF Goals"
+                                     Variant="Variant.Outlined" FullWidth="true" Min="0" />
+                </MudItem>
+                <MudItem xs="6">
+                    <MudNumericField T="int" @bind-Value="_goalsAgainst" Label="Opponent Goals"
+                                     Variant="Variant.Outlined" FullWidth="true" Min="0" />
+                </MudItem>
+            </MudGrid>
+            <MudText Typo="Typo.caption" Class="fmd__result-preview">Result: @ResultPreview()</MudText>
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => MudDialog.Cancel())" Variant="Variant.Text">Cancel</MudButton>
+        <MudButton OnClick="Save" Variant="Variant.Filled" Color="Color.Warning">Confirm</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+    [Parameter] public Match Match { get; set; } = null!;
+
+    private int _goalsFor;
+    private int _goalsAgainst;
+
+    private string ResultPreview() => (_goalsFor, _goalsAgainst) switch
+    {
+        var (f, a) when f > a => $"W — {f}:{a}",
+        var (f, a) when f < a => $"L — {f}:{a}",
+        var (f, a) => $"D — {f}:{a}",
+    };
+
+    private async Task Save()
+    {
+        await MatchService.FinalizeAsync(Match.Id, (byte)_goalsFor, (byte)_goalsAgainst);
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+}

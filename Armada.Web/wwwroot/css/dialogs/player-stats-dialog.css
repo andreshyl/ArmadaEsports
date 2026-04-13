@@ -1,0 +1,77 @@
+.psd__avatar {
+    background: var(--ttf-black) !important;
+    color: var(--ttf-gold) !important;
+    font-weight: 700 !important;
+}
+
+.psd__name {
+    font-weight: 700 !important;
+}
+
+.psd__meta {
+    color: var(--ttf-grey) !important;
+    letter-spacing: 1px !important;
+}
+
+.psd__no-data {
+    color: var(--ttf-grey) !important;
+    padding: 16px 0 !important;
+}
+
+.psd__match-label {
+    font-weight: 600 !important;
+}
+
+.psd__match-date {
+    color: var(--ttf-grey) !important;
+}
+
+.psd__attr-name {
+    min-width: 130px;
+}
+
+.psd__attr-score {
+    font-weight: 700 !important;
+    min-width: 20px;
+    text-align: right;
+}
+
+.psd__snapshot-date {
+    color: var(--ttf-grey) !important;
+}
+
+.psd__history-row {
+    background: var(--ttf-off-white);
+    border-radius: var(--ttf-radius-md);
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.psd__history-opponent {
+    flex: 1;
+    font-weight: 600 !important;
+}
+
+.psd__history-date {
+    color: var(--ttf-grey) !important;
+}
+
+.psd__section-label {
+    display: block;
+    color: var(--ttf-gold);
+    letter-spacing: 2px;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.65rem;
+    margin-bottom: 10px;
+}
+
+.psd__snapshot-row {
+    background: var(--ttf-off-white);
+    border-radius: var(--ttf-radius-md);
+    padding: 8px 12px;
+    margin-bottom: 6px;
+    border: 1px solid var(--ttf-border);
+}

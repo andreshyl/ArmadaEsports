@@ -1,0 +1,35 @@
+@inherits LayoutComponentBase
+
+<MudThemeProvider Theme="_theme" />
+<MudPopoverProvider />
+<MudDialogProvider FullWidth="true" MaxWidth="MaxWidth.Medium" />
+<MudSnackbarProvider />
+
+<MudLayout>
+    <NavBar />
+    <MudMainContent Class="ttf-main-content">
+        @Body
+    </MudMainContent>
+</MudLayout>
+
+@code {
+    private MudTheme _theme = new()
+    {
+        PaletteLight = new PaletteLight
+        {
+            Primary = "#C9A84C",
+            PrimaryContrastText = "#1A1A1A",
+            Secondary = "#8C8C8C",
+            Background = "#F5F2EB",
+            Surface = "#FFFFFF",
+            AppbarBackground = "#1A1A1A",
+            AppbarText = "#F5F2EB",
+            TextPrimary = "#1A1A1A",
+            TextSecondary = "#8C8C8C",
+            Warning = "#C9A84C",
+            WarningContrastText = "#1A1A1A",
+            WarningDarken = "#A88A3A",
+            WarningLighten = "#E8C96A",
+        }
+    };
+}

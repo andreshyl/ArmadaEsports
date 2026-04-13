@@ -1,0 +1,288 @@
+@page "/manager"
+@attribute [Authorize(Roles = "Manager")]
+@inject IPlayerService PlayerService
+@inject IMatchService MatchService
+@inject ICompetitionService CompetitionService
+@inject IAttributeService AttributeService
+@inject IDialogService DialogService
+@inject TtfAuthStateProvider AuthProvider
+@inject NavigationManager Nav
+
+<PageTitle>Manager — TTF Esports</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="ttf-page">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-4">
+        <MudText Typo="Typo.overline" Class="ttf-section-label">MANAGER DASHBOARD</MudText>
+        <AuthorizeView>
+            <Authorized>
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                    <MudIcon Icon="@Icons.Material.Filled.AccountCircle" Class="ttf-nav__icon-btn" />
+                    <MudText Typo="Typo.body2">@context.User.Identity?.Name</MudText>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Default" Size="Size.Small"
+                               StartIcon="@Icons.Material.Filled.Logout" OnClick="Logout">
+                        Logout
+                    </MudButton>
+                </MudStack>
+            </Authorized>
+        </AuthorizeView>
+    </MudStack>
+
+    <MudGrid Spacing="4">
+
+        <!-- PLANTILLA -->
+        <MudItem xs="12" md="6">
+            <div class="manager__section-card">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-3">
+                    <MudText Typo="Typo.caption" Class="manager__section-title">PLANTILLA</MudText>
+                    <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning" OnClick="OpenAddPlayer">
+                        + Add Player
+                    </MudButton>
+                </MudStack>
+                <MudTable T="Player" Items="_players" Dense="true" Elevation="0">
+                    <HeaderContent>
+                        <MudTh>#</MudTh><MudTh>Alias</MudTh><MudTh>Pos</MudTh><MudTh></MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.JerseyNumber</MudTd>
+                        <MudTd Class="manager__player-alias">@context.Alias</MudTd>
+                        <MudTd><MudChip T="string" Size="Size.Small" Class="ttf-chip--dark">@context.PrimaryPosition?.Code</MudChip></MudTd>
+                        <MudTd>
+                            <MudStack Row="true" Spacing="1">
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="@(() => OpenEditPlayer(context))" />
+                                <MudIconButton Icon="@Icons.Material.Filled.Psychology" Size="Size.Small" OnClick="@(() => OpenAddSnapshot(context))" />
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => DeletePlayer(context))" />
+                            </MudStack>
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </div>
+        </MudItem>
+
+        <!-- COMPETITIONS -->
+        <MudItem xs="12" md="6">
+            <div class="manager__section-card">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-3">
+                    <MudText Typo="Typo.caption" Class="manager__section-title">COMPETITIONS</MudText>
+                    <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning" OnClick="OpenAddCompetition">+ Add</MudButton>
+                </MudStack>
+                <MudStack Spacing="2">
+                    @foreach (var c in _competitions)
+                    {
+                        <div class="manager__comp-row">
+                            <MudText Typo="Typo.body2" Class="manager__comp-name">@c.Name</MudText>
+                            <MudChip T="string" Size="Size.Small">@c.CompetitionType</MudChip>
+                            <MudChip T="string" Size="Size.Small" Class="@(c.IsActive ? "ttf-chip--gold" : "")">
+                                @(c.IsActive ? "Active" : "Inactive")
+                            </MudChip>
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
+                                           OnClick="@(() => DeleteCompetition(c))" />
+                        </div>
+                    }
+                </MudStack>
+            </div>
+        </MudItem>
+
+        <!-- MATCHES -->
+        <MudItem xs="12">
+            <div class="manager__section-card">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-3">
+                    <MudText Typo="Typo.caption" Class="manager__section-title">MATCHES</MudText>
+                    <MudStack Row="true" Spacing="2">
+                        <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning" OnClick="OpenAddMatch">+ Add Match</MudButton>
+                        <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning" OnClick="OpenManualUpload">Manual Stats</MudButton>
+                        <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning" OnClick="OpenMatchFacts">Manual Match Facts</MudButton>
+                        <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning" OnClick="OpenAiMatchFacts">AI Match Facts</MudButton>
+                        <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning" OnClick="OpenAiUpload">AI Player Stats</MudButton>
+                    </MudStack>
+                </MudStack>
+                <MudTable T="Match" Items="_matches" Dense="true" Elevation="0">
+                    <HeaderContent>
+                        <MudTh>Date</MudTh><MudTh>Opponent</MudTh><MudTh>Competition</MudTh><MudTh>Venue</MudTh><MudTh>Result</MudTh><MudTh></MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.MatchDate.ToString("dd MMM")</MudTd>
+                        <MudTd Class="manager__match-opponent">@context.OpponentName</MudTd>
+                        <MudTd>@context.Competition?.Name</MudTd>
+                        <MudTd>@context.Venue</MudTd>
+                        <MudTd>
+                            @if (context.Status == EMatchStatus.Finished)
+                            {
+                                <MudChip T="string" Size="Size.Small" Class="@ResultChipClass(context.Result)">
+                                    @context.Result — @context.GoalsFor:@context.GoalsAgainst
+                                </MudChip>
+                            }
+                            else
+                            {
+                                <MudChip T="string" Size="Size.Small">Upcoming</MudChip>
+                            }
+                        </MudTd>
+                        <MudTd>
+                            <MudStack Row="true" Spacing="1">
+                                @if (context.Status == EMatchStatus.Upcoming)
+                                {
+                                    <MudIconButton Icon="@Icons.Material.Filled.Flag" Size="Size.Small" OnClick="@(() => OpenFinalizeMatch(context))" />
+                                }
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => DeleteMatch(context))" />
+                            </MudStack>
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </div>
+        </MudItem>
+
+    </MudGrid>
+</MudContainer>
+
+@code {
+    private List<Player> _players = [];
+    private List<Competition> _competitions = [];
+    private List<Match> _matches = [];
+
+    protected override async Task OnInitializedAsync() => await LoadDataAsync();
+
+    private async Task LoadDataAsync()
+    {
+        _players = await PlayerService.GetAllAsync(includeInactive: true);
+        _competitions = await CompetitionService.GetAllAsync(includeInactive: true);
+        var upcoming = await MatchService.GetUpcomingAsync();
+        var finished = await MatchService.GetFinishedAsync();
+        _matches = [.. finished, .. upcoming];
+    }
+
+    private async Task Logout()
+    {
+        await AuthProvider.LogoutAsync();
+        Nav.NavigateTo("/manager/login");
+    }
+
+    // ── PLAYERS ──────────────────────────────────────
+    private async Task OpenAddPlayer()
+    {
+        var dialog = await DialogService.ShowAsync<AddPlayerDialog>("Add Player",
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseButton = true });
+        if (!(await dialog.Result)!.Canceled) await LoadDataAsync();
+    }
+
+    private async Task OpenEditPlayer(Player p)
+    {
+        var parameters = new DialogParameters();
+        parameters.Add("Player", p);
+        var dialog = await DialogService.ShowAsync<EditPlayerDialog>("Edit Player", parameters,
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseButton = true });
+        if (!(await dialog.Result)!.Canceled) await LoadDataAsync();
+    }
+
+    private async Task OpenAddSnapshot(Player p)
+    {
+        var parameters = new DialogParameters();
+        parameters.Add("Player", p);
+        await DialogService.ShowAsync<AddAttributeSnapshotDialog>($"Mental Attrs — {p.Alias}", parameters,
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseButton = true });
+    }
+
+    private async Task DeletePlayer(Player p)
+    {
+        var result = await DialogService.ShowAsync<ConfirmDialog>("Delete Player",
+            new DialogParameters { { "Message", $"Delete {p.Alias}? This cannot be undone." } },
+            new DialogOptions { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true });
+        if (!(await result.Result)!.Canceled)
+        {
+            await PlayerService.DeactivateAsync(p.Id);
+            await LoadDataAsync();
+        }
+    }
+
+    // ── COMPETITIONS ──────────────────────────────────
+    private async Task OpenAddCompetition()
+    {
+        var dialog = await DialogService.ShowAsync<AddCompetitionDialog>("Add Competition",
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseButton = true });
+        if (!(await dialog.Result)!.Canceled) await LoadDataAsync();
+    }
+
+    private async Task DeleteCompetition(Competition c)
+    {
+        var result = await DialogService.ShowAsync<ConfirmDialog>("Delete Competition",
+            new DialogParameters { { "Message", $"Delete \"{c.Name}\"? All related matches will also be removed." } },
+            new DialogOptions { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true });
+        if (!(await result.Result)!.Canceled)
+        {
+            await CompetitionService.DeleteAsync(c.Id);
+            await LoadDataAsync();
+        }
+    }
+
+    // ── MATCHES ───────────────────────────────────────
+    private async Task OpenAddMatch()
+    {
+        var parameters = new DialogParameters();
+        parameters.Add("Competitions", _competitions);
+        var dialog = await DialogService.ShowAsync<AddMatchDialog>("Add Match", parameters,
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseButton = true });
+        if (!(await dialog.Result)!.Canceled) await LoadDataAsync();
+    }
+
+    private async Task OpenFinalizeMatch(Match m)
+    {
+        var parameters = new DialogParameters();
+        parameters.Add("Match", m);
+        var dialog = await DialogService.ShowAsync<FinalizeMatchDialog>("Finalize Match", parameters,
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseButton = true });
+        if (!(await dialog.Result)!.Canceled) await LoadDataAsync();
+    }
+
+    private async Task DeleteMatch(Match m)
+    {
+        var result = await DialogService.ShowAsync<ConfirmDialog>("Delete Match",
+            new DialogParameters { { "Message", $"Delete match vs {m.OpponentName}? All stats will be lost." } },
+            new DialogOptions { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true });
+        if (!(await result.Result)!.Canceled)
+        {
+            await MatchService.DeleteAsync(m.Id);
+            await LoadDataAsync();
+        }
+    }
+
+    private async Task OpenAiMatchFacts()
+    {
+        var parameters = new DialogParameters();
+        parameters.Add("Matches", _matches);
+        var dialog = await DialogService.ShowAsync<MatchFactsUploadDialog>("AI Match Facts Upload", parameters,
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseButton = true });
+        if (!(await dialog.Result)!.Canceled) await LoadDataAsync();
+    }
+
+    private async Task OpenMatchFacts()
+    {
+        var parameters = new DialogParameters();
+        parameters.Add("Matches", _matches);
+        var dialog = await DialogService.ShowAsync<MatchFactsUploadDialog>("Match Facts Upload", parameters,
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseButton = true });
+        if (!(await dialog.Result)!.Canceled) await LoadDataAsync();
+    }
+
+    private async Task OpenManualUpload()
+    {
+        var parameters = new DialogParameters();
+        parameters.Add("Matches", _matches);
+        var dialog = await DialogService.ShowAsync<ManualStatUploadDialog>("Manual Stats Upload", parameters,
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseButton = true });
+        if (!(await dialog.Result)!.Canceled) await LoadDataAsync();
+    }
+
+    private async Task OpenAiUpload()
+    {
+        var parameters = new DialogParameters();
+        parameters.Add("Matches", _matches);
+        await DialogService.ShowAsync<AiStatUploadDialog>("AI Stats Upload", parameters,
+            new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = true });
+    }
+
+    private static string ResultChipClass(EMatchResult? r) => r switch
+    {
+        EMatchResult.W => "ttf-chip--win",
+        EMatchResult.D => "ttf-chip--draw",
+        EMatchResult.L => "ttf-chip--loss",
+        _ => ""
+    };
+}

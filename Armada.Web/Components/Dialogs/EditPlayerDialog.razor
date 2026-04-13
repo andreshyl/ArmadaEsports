@@ -1,0 +1,83 @@
+@using ArmadaEsports.Core.Models
+@using ModelPosition = ArmadaEsports.Core.Models.Position
+@inject IPlayerService PlayerService
+
+<MudDialog>
+    <DialogContent>
+        <MudStack Spacing="3">
+            <MudTextField @bind-Value="_alias" Label="Alias" Variant="Variant.Outlined" FullWidth="true" Required="true" />
+            <MudNumericField T="int" @bind-Value="_jerseyNumber" Label="Jersey Number" Variant="Variant.Outlined" FullWidth="true" Min="1" Max="99" />
+            <MudSelect T="int" @bind-Value="_primaryPositionId" Label="Primary Position" Variant="Variant.Outlined" FullWidth="true">
+                @foreach (var p in _positions)
+                {
+                    <MudSelectItem T="int" Value="@p.Id">@p.Code — @p.NameEs</MudSelectItem>
+                }
+            </MudSelect>
+            <MudSelect T="int?" @bind-Value="_secondaryPositionId" Label="Secondary Position (optional)" Variant="Variant.Outlined" FullWidth="true" Clearable="true">
+                @foreach (var p in _positions)
+                {
+                    <MudSelectItem T="int?" Value="@((int?)p.Id)">@p.Code — @p.NameEs</MudSelectItem>
+                }
+            </MudSelect>
+            <MudSelect T="int?" @bind-Value="_tertiaryPositionId" Label="Tertiary Position (optional)" Variant="Variant.Outlined" FullWidth="true" Clearable="true">
+                @foreach (var p in _positions)
+                {
+                    <MudSelectItem T="int?" Value="@((int?)p.Id)">@p.Code — @p.NameEs</MudSelectItem>
+                }
+            </MudSelect>
+            <MudSwitch @bind-Value="_isActive" Label="Active" Color="Color.Warning" />
+            @if (_error is not null)
+            {
+                <MudText Typo="Typo.caption" Class="epd__error">@_error</MudText>
+            }
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => MudDialog.Cancel())" Variant="Variant.Text">Cancel</MudButton>
+        <MudButton OnClick="Save" Variant="Variant.Filled" Color="Color.Warning" Disabled="_saving">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+    [Parameter] public Player Player { get; set; } = null!;
+
+    private List<ModelPosition> _positions = [];
+    private string _alias = string.Empty;
+    private int _jerseyNumber;
+    private int _primaryPositionId;
+    private int? _secondaryPositionId;
+    private int? _tertiaryPositionId;
+    private bool _isActive;
+    private string? _error;
+    private bool _saving;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _positions = await PlayerService.GetAllPositionsAsync();
+        _alias = Player.Alias;
+        _jerseyNumber = Player.JerseyNumber;
+        _primaryPositionId = Player.PrimaryPositionId;
+        _secondaryPositionId = Player.SecondaryPositionId;
+        _tertiaryPositionId = Player.TertiaryPositionId;
+        _isActive = Player.IsActive;
+    }
+
+    private async Task Save()
+    {
+        if (string.IsNullOrWhiteSpace(_alias)) { _error = "Alias is required."; return; }
+        if (await PlayerService.AliasExistsAsync(_alias, Player.Id)) { _error = "Alias already taken."; return; }
+        if (await PlayerService.JerseyNumberExistsAsync(_jerseyNumber, Player.Id)) { _error = "Jersey number taken."; return; }
+
+        _saving = true;
+        Player.Alias = _alias.Trim();
+        Player.JerseyNumber = _jerseyNumber;
+        Player.PrimaryPositionId = _primaryPositionId;
+        Player.SecondaryPositionId = _secondaryPositionId;
+        Player.TertiaryPositionId = _tertiaryPositionId;
+        Player.IsActive = _isActive;
+
+        await PlayerService.UpdateAsync(Player);
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+}

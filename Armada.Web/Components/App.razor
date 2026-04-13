@@ -1,0 +1,48 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <base href="/" />
+    <ResourcePreloader />
+    <link rel="stylesheet" href="@Assets["app.css"]" />
+    <link href="@Assets["_content/MudBlazor/MudBlazor.min.css"]" rel="stylesheet" />
+
+    @* SHARED TOKENS *@
+    <link rel="stylesheet" href="@Assets["css/app.css"]" />
+
+    @* LAYOUT *@
+    <link rel="stylesheet" href="@Assets["css/layout/main-layout.css"]" />
+    <link rel="stylesheet" href="@Assets["css/layout/nav-bar.css"]" />
+
+    @* PAGES *@
+    <link rel="stylesheet" href="@Assets["css/pages/home.css"]" />
+    <link rel="stylesheet" href="@Assets["css/pages/plantilla.css"]" />
+    <link rel="stylesheet" href="@Assets["css/pages/partidos.css"]" />
+    <link rel="stylesheet" href="@Assets["css/pages/calendario.css"]" />
+    <link rel="stylesheet" href="@Assets["css/pages/h2h.css"]" />
+    <link rel="stylesheet" href="@Assets["css/pages/manager.css"]" />
+    <link rel="stylesheet" href="@Assets["css/pages/notfound.css"]" />
+
+    @* DIALOGS *@
+    <link rel="stylesheet" href="@Assets["css/dialogs/player-stats-dialog.css"]" />
+    <link rel="stylesheet" href="@Assets["css/dialogs/match-detail-dialog.css"]" />
+    <link rel="stylesheet" href="@Assets["css/dialogs/add-player-dialog.css"]" />
+    <link rel="stylesheet" href="@Assets["css/dialogs/finalize-match-dialog.css"]" />
+    <link rel="stylesheet" href="@Assets["css/dialogs/add-attribute-snapshot-dialog.css"]" />
+    <link rel="stylesheet" href="@Assets["css/dialogs/ai-stat-upload-dialog.css"]" />
+
+    <ImportMap />
+    <link rel="icon" type="image/png" href="favicon.png" />
+    <HeadOutlet />
+</head>
+
+<body>
+    <Routes @rendermode="InteractiveServer" />
+    <ReconnectModal />
+    <script src="@Assets["_framework/blazor.web.js"]"></script>
+    <script src="@Assets["_content/MudBlazor/MudBlazor.min.js"]"></script>
+</body>
+
+</html>

@@ -1,0 +1,203 @@
+@page "/plantilla"
+@inject IPlayerService PlayerService
+@inject IDialogService DialogService
+
+<PageTitle>Plantilla — TTF Esports</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="ttf-page">
+    <MudText Typo="Typo.overline" Class="ttf-section-label">PLANTILLA</MudText>
+
+    @if (_players is null)
+    {
+        <MudProgressLinear Color="Color.Warning" Indeterminate="true" />
+    }
+    else
+    {
+        <MudGrid Spacing="4">
+
+            <!-- LEFT: Squad list -->
+            <MudItem xs="12" md="4">
+                @foreach (var group in _groups)
+                {
+                    var players = _players.Where(p => p.PrimaryPosition?.PositionGroup.ToString() == group).ToList();
+                    if (!players.Any()) continue;
+
+                    <MudText Typo="Typo.caption" Class="plantilla__group-label">@group</MudText>
+                    <MudStack Spacing="1" Class="mb-4">
+                        @foreach (var p in players)
+                        {
+                            <div class="plantilla__list-row" @onclick="() => OpenStats(p)">
+                                <MudAvatar Class="plantilla__avatar plantilla__avatar--sm">
+                                    @p.Alias[..Math.Min(2, p.Alias.Length)].ToUpper()
+                                </MudAvatar>
+                                <div class="plantilla__list-info">
+                                    <MudText Typo="Typo.body2" Class="plantilla__player-name">@p.Alias</MudText>
+                                    <MudText Typo="Typo.caption" Class="plantilla__player-pos">@p.PrimaryPosition?.Code</MudText>
+                                </div>
+                                @if (_ratings.TryGetValue(p.Id, out var rating))
+                                {
+                                    <MudChip T="string" Size="Size.Small" Class="ttf-chip--gold">@rating.ToString("F1")</MudChip>
+                                }
+                                else
+                                {
+                                    <MudChip T="string" Size="Size.Small" Class="ttf-chip--dark">—</MudChip>
+                                }
+                            </div>
+                        }
+                    </MudStack>
+                }
+            </MudItem>
+
+            <!-- RIGHT: 4-4-2 Formation -->
+            <MudItem xs="12" md="8">
+                <div class="formation__header">
+                    <MudText Class="formation__title">ALINEACIÓN — 4-4-2</MudText>
+                </div>
+                <div class="formation__field">
+                    <svg class="formation__lines" viewBox="0 0 460 640" preserveAspectRatio="none">
+                        <line x1="0" y1="320" x2="460" y2="320" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" />
+                        <circle cx="230" cy="320" r="50" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" />
+                        <circle cx="230" cy="320" r="3" fill="rgba(255,255,255,0.5)" />
+                        <rect x="80" y="0" width="300" height="90" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" />
+                        <rect x="140" y="0" width="180" height="32" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" />
+                        <rect x="80" y="550" width="300" height="90" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" />
+                        <rect x="140" y="608" width="180" height="32" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" />
+                        <circle cx="230" cy="60" r="3" fill="rgba(255,255,255,0.5)" />
+                        <circle cx="230" cy="580" r="3" fill="rgba(255,255,255,0.5)" />
+                    </svg>
+
+                    @* Forwards: Left Striker (DCI) at 35%, Right Striker (DC) at 65% *@
+                    @FormationSlot("DCI", 35f, 12f)
+                    @FormationSlot("DC", 65f, 12f)
+
+                    @* Midfielders: LM(MI) 10%, LCM(MCD) 35%, RCM(MVD) 65%, RM(MD) 90% *@
+                    @FormationSlot("MI", 10f, 38f)
+                    @FormationSlot("MCD", 35f, 38f)
+                    @FormationSlot("MVD", 65f, 38f)
+                    @FormationSlot("MD", 90f, 38f)
+
+                    @* Defenders: LB(LI) 10%, LCB(DFI) 35%, RCB(DFD) 65%, RB(LD) 90% *@
+                    @FormationSlot("LI", 10f, 63f)
+                    @FormationSlot("DFI", 35f, 63f)
+                    @FormationSlot("DFD", 65f, 63f)
+                    @FormationSlot("LD", 90f, 63f)
+
+                    @* GK: PO at center *@
+                    @FormationSlot("PO", 50f, 87f)
+                </div>
+            </MudItem>
+
+        </MudGrid>
+    }
+</MudContainer>
+
+@code {
+    private List<Player>? _players;
+    private Dictionary<int, decimal> _ratings = new();
+    private Dictionary<string, Player?> _formation = new();
+
+    private static readonly string[] _groups =
+        ["Goalkeeper", "Defender", "Midfielder", "Forward"];
+
+    // Position label displayed under each slot
+    private static readonly Dictionary<string, string> _posLabels = new()
+    {
+        ["PO"] = "GK",
+        ["LD"] = "RB",
+        ["DFD"] = "RCB",
+        ["DFI"] = "LCB",
+        ["LI"] = "LB",
+        ["MD"] = "RM",
+        ["MVD"] = "RCM",
+        ["MCD"] = "LCM",
+        ["MI"] = "LM",
+        ["DC"] = "ST",
+        ["DCI"] = "ST",
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        _players = await PlayerService.GetAllAsync();
+        foreach (var p in _players)
+        {
+            var latest = p.AttributeSnapshots
+                .OrderByDescending(s => s.SnapshotDate)
+                .FirstOrDefault();
+            if (latest is not null)
+                _ratings[p.Id] = latest.OverallRating;
+        }
+        BuildFormation();
+    }
+
+    private void BuildFormation()
+    {
+        var codes = new[] { "PO", "LD", "LI", "DFD", "DFI", "MCD", "MVD", "MI", "MD", "DC", "DCI" };
+        var assigned = new HashSet<int>();
+
+        // Pass 1: assign by primary position only
+        foreach (var code in codes)
+        {
+            var player = _players!
+                .Where(p => !assigned.Contains(p.Id) && p.PrimaryPosition?.Code == code)
+                .OrderByDescending(p => _ratings.TryGetValue(p.Id, out var r) ? r : 0)
+                .FirstOrDefault();
+
+            _formation[code] = player;
+            if (player is not null) assigned.Add(player.Id);
+        }
+
+        // Pass 2: fill empty slots by secondary position
+        foreach (var code in codes.Where(c => _formation[c] is null))
+        {
+            var player = _players!
+                .Where(p => !assigned.Contains(p.Id) && p.SecondaryPosition?.Code == code)
+                .OrderByDescending(p => _ratings.TryGetValue(p.Id, out var r) ? r : 0)
+                .FirstOrDefault();
+
+            _formation[code] = player;
+            if (player is not null) assigned.Add(player.Id);
+        }
+
+        // Pass 3: fill remaining empty slots by tertiary position
+        foreach (var code in codes.Where(c => _formation[c] is null))
+        {
+            var player = _players!
+                .Where(p => !assigned.Contains(p.Id) && p.TertiaryPosition?.Code == code)
+                .OrderByDescending(p => _ratings.TryGetValue(p.Id, out var r) ? r : 0)
+                .FirstOrDefault();
+
+            _formation[code] = player;
+            if (player is not null) assigned.Add(player.Id);
+        }
+    }
+
+    private RenderFragment FormationSlot(string posCode, float xPct, float yPct) => __builder =>
+    {
+        _formation.TryGetValue(posCode, out var player);
+        _ratings.TryGetValue(player?.Id ?? 0, out var rating);
+        var jerseyNum = player is not null ? player.JerseyNumber.ToString() : "?";
+        var alias = player?.Alias ?? "—";
+        var posLabel = _posLabels.TryGetValue(posCode, out var lbl) ? lbl : posCode;
+        var isEmpty = player is null;
+
+        <div class="formation__slot" style="left:@(xPct.ToString("F0"))%;top:@(yPct.ToString("F0"))%;"
+             @onclick="@(() => { if (player is not null) _ = OpenStats(player); })">
+            <div class="formation__avatar @(isEmpty ? "formation__avatar--empty" : "")">
+                <span class="formation__initials">@jerseyNum</span>
+                @if (!isEmpty && _ratings.ContainsKey(player!.Id))
+                {
+                    <span class="formation__rating">@rating.ToString("F1")</span>
+                }
+            </div>
+            <span class="formation__alias">@alias</span>
+            <span class="formation__pos-code">@posLabel</span>
+        </div>
+    };
+
+    private async Task OpenStats(Player p)
+    {
+        var parameters = new DialogParameters { { "Player", p } };
+        await DialogService.ShowAsync<PlayerStatsDialog>(p.Alias, parameters,
+            new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = true });
+    }
+}

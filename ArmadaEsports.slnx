@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="Armada.Core/Armada.Core.csproj" />
+  <Project Path="Armada.Data/Armada.Data.csproj" />
+  <Project Path="Armada.Web/Armada.Web.csproj" />
+</Solution>

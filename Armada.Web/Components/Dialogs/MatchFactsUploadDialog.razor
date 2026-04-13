@@ -1,0 +1,122 @@
+﻿@using Microsoft.AspNetCore.Components.Forms
+@inject IAiParserService AiParserService
+@inject IMatchService MatchService
+
+<MudDialog>
+    <DialogContent>
+        <MudStack Spacing="3">
+            <MudSelect T="int" @bind-Value="_matchId" Label="Match" Variant="Variant.Outlined" FullWidth="true">
+                @foreach (var m in Matches.Where(m => m.Status == EMatchStatus.Finished))
+                {
+                    <MudSelectItem T="int" Value="@m.Id">@m.MatchDate.ToString("dd MMM") — vs @m.OpponentName</MudSelectItem>
+                }
+            </MudSelect>
+
+            <InputFile id="facts-file-input" OnChange="OnFileSelected" accept="image/*" style="display:none;" />
+            <label for="facts-file-input" style="width:100%;">
+                <MudButton Variant="Variant.Outlined" Color="Color.Default" FullWidth="true"
+                           StartIcon="@Icons.Material.Filled.Image" Style="pointer-events:none;">
+                    @(_fileName ?? "Select Match Facts screenshot")
+                </MudButton>
+            </label>
+
+            <MudButton Variant="Variant.Filled" Color="Color.Warning" FullWidth="true"
+                       Disabled="@(_imageBase64 is null || _matchId == 0 || _parsing)"
+                       OnClick="Parse">
+                @(_parsing ? "Analysing..." : "Extract Match Facts with AI")
+            </MudButton>
+
+            @if (_error is not null)
+            {
+                <MudAlert Severity="Severity.Error" Dense="true">@_error</MudAlert>
+            }
+
+            @if (_facts is not null)
+            {
+                <MudDivider />
+                <MudText Typo="Typo.caption" Class="aud__rows-label">REVIEW EXTRACTED FACTS</MudText>
+                <MudGrid Spacing="2">
+                    <MudItem xs="6">
+                        <MudNumericField T="byte?" @bind-Value="_facts.PossessionPct" Label="Possession %" Variant="Variant.Outlined" FullWidth="true" Min="0" Max="100" />
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudNumericField T="byte?" @bind-Value="_facts.PassAccuracyPct" Label="Pass Accuracy %" Variant="Variant.Outlined" FullWidth="true" Min="0" Max="100" />
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudNumericField T="byte?" @bind-Value="_facts.ShotsFor" Label="Shots (AES)" Variant="Variant.Outlined" FullWidth="true" Min="0" />
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudNumericField T="byte?" @bind-Value="_facts.ShotsAgainst" Label="Shots (Opponent)" Variant="Variant.Outlined" FullWidth="true" Min="0" />
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudNumericField T="short?" @bind-Value="_facts.PassesAttempted" Label="Passes Attempted" Variant="Variant.Outlined" FullWidth="true" Min="0" />
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudNumericField T="byte?" @bind-Value="_facts.TacklesFor" Label="Tackles (AES)" Variant="Variant.Outlined" FullWidth="true" Min="0" />
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudNumericField T="byte?" @bind-Value="_facts.TacklesAgainst" Label="Tackles (Opponent)" Variant="Variant.Outlined" FullWidth="true" Min="0" />
+                    </MudItem>
+                </MudGrid>
+
+                <MudButton Variant="Variant.Filled" Color="Color.Warning" FullWidth="true" OnClick="Confirm">
+                    Confirm & Save
+                </MudButton>
+            }
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => MudDialog.Close(DialogResult.Ok(true)))" Variant="Variant.Text">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+    [Parameter] public List<Match> Matches { get; set; } = [];
+
+    private int _matchId;
+    private string? _imageBase64;
+    private string? _mimeType;
+    private string? _fileName;
+    private bool _parsing;
+    private string? _error;
+    private MatchFactsResult? _facts;
+
+    private async Task OnFileSelected(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        _fileName = file.Name;
+        _mimeType = file.ContentType;
+        using var ms = new MemoryStream();
+        await file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024).CopyToAsync(ms);
+        _imageBase64 = Convert.ToBase64String(ms.ToArray());
+    }
+
+    private async Task Parse()
+    {
+        _error = null;
+        _facts = null;
+        _parsing = true;
+        try
+        {
+            _facts = await AiParserService.ExtractMatchFactsAsync(_imageBase64!, _mimeType!);
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _parsing = false;
+        }
+    }
+
+    private async Task Confirm()
+    {
+        if (_facts is null || _matchId == 0) return;
+        await MatchService.UpdateMatchFactsAsync(_matchId, _facts.PossessionPct, _facts.ShotsFor,
+            _facts.ShotsAgainst, _facts.PassesAttempted, _facts.PassAccuracyPct,
+            _facts.TacklesFor, _facts.TacklesAgainst);
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+}

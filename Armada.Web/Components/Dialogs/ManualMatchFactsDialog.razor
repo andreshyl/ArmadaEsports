@@ -1,0 +1,100 @@
+﻿@inject IMatchService MatchService
+
+<MudDialog>
+    <DialogContent>
+        <MudStack Spacing="3">
+            <MudSelect T="int" @bind-Value="_matchId" Label="Match" Variant="Variant.Outlined" FullWidth="true">
+                @foreach (var m in Matches.Where(m => m.Status == EMatchStatus.Finished))
+                {
+                    <MudSelectItem T="int" Value="@m.Id">@m.MatchDate.ToString("dd MMM") — vs @m.OpponentName</MudSelectItem>
+                }
+            </MudSelect>
+
+            <MudDivider />
+
+            <MudGrid Spacing="2">
+                <MudItem xs="6">
+                    <MudNumericField T="byte?" @bind-Value="_possessionPct" Label="Possession %" Variant="Variant.Outlined" FullWidth="true" Min="0" Max="100" />
+                </MudItem>
+                <MudItem xs="6">
+                    <MudNumericField T="byte?" @bind-Value="_passAccuracyPct" Label="Pass Accuracy %" Variant="Variant.Outlined" FullWidth="true" Min="0" Max="100" />
+                </MudItem>
+                <MudItem xs="6">
+                    <MudNumericField T="byte?" @bind-Value="_shotsFor" Label="Shots (AES)" Variant="Variant.Outlined" FullWidth="true" Min="0" />
+                </MudItem>
+                <MudItem xs="6">
+                    <MudNumericField T="byte?" @bind-Value="_shotsAgainst" Label="Shots (Opponent)" Variant="Variant.Outlined" FullWidth="true" Min="0" />
+                </MudItem>
+                <MudItem xs="6">
+                    <MudNumericField T="short?" @bind-Value="_passesAttempted" Label="Passes Attempted" Variant="Variant.Outlined" FullWidth="true" Min="0" />
+                </MudItem>
+                <MudItem xs="6">
+                    <MudNumericField T="byte?" @bind-Value="_tacklesFor" Label="Tackles (AES)" Variant="Variant.Outlined" FullWidth="true" Min="0" />
+                </MudItem>
+                <MudItem xs="6">
+                    <MudNumericField T="byte?" @bind-Value="_tacklesAgainst" Label="Tackles (Opponent)" Variant="Variant.Outlined" FullWidth="true" Min="0" />
+                </MudItem>
+            </MudGrid>
+
+            @if (_error is not null)
+            {
+                <MudText Typo="Typo.caption" Color="Color.Error">@_error</MudText>
+            }
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => MudDialog.Cancel())" Variant="Variant.Text">Cancel</MudButton>
+        <MudButton OnClick="Save" Variant="Variant.Filled" Color="Color.Warning"
+                   Disabled="@(_matchId == 0 || _saving)">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+    [Parameter] public List<Match> Matches { get; set; } = [];
+
+    private int _matchId;
+    private byte? _possessionPct;
+    private byte? _shotsFor;
+    private byte? _shotsAgainst;
+    private short? _passesAttempted;
+    private byte? _passAccuracyPct;
+    private byte? _tacklesFor;
+    private byte? _tacklesAgainst;
+    private string? _error;
+    private bool _saving;
+
+    protected override void OnParametersSet()
+    {
+        // Pre-fill if match already has facts
+        var match = Matches.FirstOrDefault(m => m.Id == _matchId);
+        if (match is null) return;
+        _possessionPct = match.PossessionPct;
+        _shotsFor = match.ShotsFor;
+        _shotsAgainst = match.ShotsAgainst;
+        _passesAttempted = match.PassesAttempted;
+        _passAccuracyPct = match.PassAccuracyPct;
+        _tacklesFor = match.TacklesFor;
+        _tacklesAgainst = match.TacklesAgainst;
+    }
+
+    private async Task Save()
+    {
+        if (_matchId == 0) { _error = "Select a match."; return; }
+        _saving = true;
+        try
+        {
+            await MatchService.UpdateMatchFactsAsync(_matchId, _possessionPct, _shotsFor,
+                _shotsAgainst, _passesAttempted, _passAccuracyPct, _tacklesFor, _tacklesAgainst);
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+}

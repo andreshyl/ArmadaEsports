@@ -7,7 +7,7 @@ public interface IAiParserService
     Task<AiMatchParseJob> SubmitImageAsync(int matchId, string imageBase64, string mimeType);
     Task<AiMatchParseJob?> GetJobAsync(Guid jobId);
     Task ConfirmJobAsync(Guid jobId, List<AiParseJobRow> editedRows);
-    Task<MatchFactsResult> ExtractMatchFactsAsync(string imageBase64, string mimeType);
+    Task<MatchFactsResult> ExtractMatchFactsAsync(string imageBase64, string mimeType, string ttfSide = "right");
 }
 
 public class MatchFactsResult

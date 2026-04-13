@@ -35,10 +35,12 @@
     font-weight: 700 !important;
 }
 
+/* Avatar shows jersey number — needs slightly larger font */
 .plantilla__avatar--sm {
-    width: 32px !important;
-    height: 32px !important;
-    font-size: 0.65rem !important;
+    width: 36px !important;
+    height: 36px !important;
+    font-size: 0.75rem !important;
+    font-weight: 800 !important;
 }
 
 .plantilla__player-name {
@@ -53,10 +55,10 @@
     margin-top: 6px !important;
 }
 
-/* ── FIELD ── */
+/* ── FIELD HEADER ── */
 .formation__header {
     text-align: center;
-    margin-bottom: 12px;
+    margin-bottom: 16px;
 }
 
 .formation__title {
@@ -66,9 +68,9 @@
     font-weight: 600;
     text-transform: uppercase;
     font-size: 2rem;
-    margin-bottom: 0;
 }
 
+/* ── FIELD ── */
 .formation__field {
     position: relative;
     width: 100%;
@@ -97,7 +99,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 3px;
+    gap: 4px; /* symmetrical spacing between all children */
     cursor: pointer;
     z-index: 10;
 }
@@ -127,11 +129,13 @@
     border-style: dashed;
 }
 
+/* Jersey number — bigger, bolder */
 .formation__initials {
     color: var(--ttf-gold);
-    font-size: 0.6rem;
-    font-weight: 700;
-    letter-spacing: 0.5px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0;
+    line-height: 1;
 }
 
 .formation__avatar--empty .formation__initials {
@@ -140,12 +144,12 @@
 
 .formation__rating {
     position: absolute;
-    bottom: -6px;
+    bottom: -7px;
     left: 50%;
     transform: translateX(-50%);
     background: var(--ttf-gold);
     color: var(--ttf-black);
-    font-size: 0.48rem;
+    font-size: 0.5rem;
     font-weight: 800;
     padding: 1px 4px;
     border-radius: 4px;
@@ -153,25 +157,29 @@
     line-height: 1.4;
 }
 
+/* Alias label — same gap as pos-code, symmetrical */
 .formation__alias {
     color: #fff;
-    font-size: 0.5rem;
+    font-size: 0.52rem;
     font-weight: 600;
     letter-spacing: 0.3px;
     text-align: center;
     background: rgba(0,0,0,0.6);
-    padding: 1px 5px;
+    padding: 2px 5px;
     border-radius: 3px;
-    max-width: 70px;
+    max-width: 72px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    margin-top: 6px;
+    margin-top: 6px; /* pushes alias below rating badge cleanly */
 }
 
+/* Position code — 25% bigger, symmetrical margin */
 .formation__pos-code {
-    color: rgba(255,255,255,0.45);
-    font-size: 0.42rem;
+    color: rgba(255,255,255,0.6);
+    font-size: 0.63rem; /* was 0.42rem → +50% */
+    font-weight: 600;
     letter-spacing: 1px;
     text-transform: uppercase;
+    margin-top: 1px;
 }

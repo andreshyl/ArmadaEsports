@@ -93,6 +93,7 @@
                         <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning" OnClick="OpenMatchFacts">Manual Match Facts</MudButton>
                         <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning" OnClick="OpenAiMatchFacts">AI Match Facts</MudButton>
                         <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning" OnClick="OpenAiUpload">AI Player Stats</MudButton>
+                        <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning" OnClick="OpenCsvImport">CSV Import</MudButton>
                     </MudStack>
                 </MudStack>
                 <MudTable T="Match" Items="_matches" Dense="true" Elevation="0">
@@ -256,7 +257,7 @@
     {
         var parameters = new DialogParameters();
         parameters.Add("Matches", _matches);
-        var dialog = await DialogService.ShowAsync<MatchFactsUploadDialog>("Match Facts Upload", parameters,
+        var dialog = await DialogService.ShowAsync<ManualMatchFactsDialog>("Manual Match Facts", parameters,
             new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseButton = true });
         if (!(await dialog.Result)!.Canceled) await LoadDataAsync();
     }
@@ -276,6 +277,15 @@
         parameters.Add("Matches", _matches);
         await DialogService.ShowAsync<AiStatUploadDialog>("AI Stats Upload", parameters,
             new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = true });
+    }
+
+    private async Task OpenCsvImport()
+    {
+        var parameters = new DialogParameters();
+        parameters.Add("Matches", _matches);
+        var dialog = await DialogService.ShowAsync<CsvStatUploadDialog>("CSV Stats Import", parameters,
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseButton = true });
+        if (!(await dialog.Result)!.Canceled) await LoadDataAsync();
     }
 
     private static string ResultChipClass(EMatchResult? r) => r switch

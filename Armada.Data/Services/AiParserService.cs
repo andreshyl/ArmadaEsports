@@ -155,21 +155,24 @@ public class AiParserService(ArmadaDbContext db, IConfiguration config) : IAiPar
         public decimal? MatchRating { get; set; }
         public decimal Confidence { get; set; }
     }
-    public async Task<MatchFactsResult> ExtractMatchFactsAsync(string imageBase64, string mimeType)
+    public async Task<MatchFactsResult> ExtractMatchFactsAsync(string imageBase64, string mimeType, string ttfSide = "right")
     {
-        const string factsPrompt = """
+        var ttfCol = ttfSide == "right" ? "RIGHT (green)" : "LEFT (blue)";
+        var oppCol = ttfSide == "right" ? "LEFT (blue)" : "RIGHT (green)";
+        var factsPrompt = $"""
             You are extracting EA FC 26 Match Facts stats from a screenshot.
-            The screen shows team stats: Possession %, Shots, Passes Attempted, Pass Accuracy %, Tackles.
-            The left column is AES (Armada Esports / our team), right column is the opponent.
+            The screen shows two columns of team stats: Possession %, Shots, Passes Attempted, Pass Accuracy %, Tackles.
+            TTF / Armada Esports is the {ttfCol} column.
+            The opponent is the {oppCol} column.
             Return ONLY a valid JSON object with these exact keys:
-              possession_pct    - our possession percentage (integer)
-              shots_for         - our shots (integer)
+              possession_pct    - TTF possession percentage (integer)
+              shots_for         - TTF shots (integer)
               shots_against     - opponent shots (integer)
-              passes_attempted  - our passes attempted (integer)
-              pass_accuracy_pct - our pass accuracy percentage (integer)
-              tackles_for       - our tackles (integer)
+              passes_attempted  - TTF passes attempted (integer)
+              pass_accuracy_pct - TTF pass accuracy percentage (integer)
+              tackles_for       - TTF tackles (integer)
               tackles_against   - opponent tackles (integer)
-            Return ONLY the JSON object. No markdown. No explanation.
+            Return ONLY the JSON object. No markdown. No explanation. No code fences.
             """;
 
         var model = GetModel();

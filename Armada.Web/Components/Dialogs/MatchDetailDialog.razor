@@ -20,36 +20,60 @@
         </MudStack>
     </TitleContent>
     <DialogContent>
-        @if (!Match.PerformanceStats.Any())
-        {
-            <MudText Typo="Typo.body2" Class="mdd__no-data">No player stats recorded for this match.</MudText>
-        }
-        else
-        {
-            <MudTable T="MatchPerformanceStat" Items="Match.PerformanceStats.OrderByDescending(s => s.MatchRating)"
-                      Dense="true" Elevation="0">
-                <HeaderContent>
-                    <MudTh>Player</MudTh>
-                    <MudTh>Pos</MudTh>
-                    <MudTh>⚽</MudTh><MudTh>🅰</MudTh>
-                    <MudTh>Pass%</MudTh><MudTh>Shot%</MudTh>
-                    <MudTh>Tackles</MudTh><MudTh>Intercept</MudTh><MudTh>Saves</MudTh>
-                    <MudTh>Rating</MudTh>
-                </HeaderContent>
-                <RowTemplate>
-                    <MudTd><MudText Typo="Typo.body2" Class="mdd__player-alias">@context.Player?.Alias</MudText></MudTd>
-                    <MudTd><MudChip T="string" Size="Size.Small" Class="ttf-chip--dark">@context.Player?.PrimaryPosition?.Code</MudChip></MudTd>
-                    <MudTd>@context.Goals</MudTd>
-                    <MudTd>@context.Assists</MudTd>
-                    <MudTd>@(context.PassAccuracyPct?.ToString("F0") ?? "-")%</MudTd>
-                    <MudTd>@(context.ShotAccuracyPct?.ToString("F0") ?? "-")%</MudTd>
-                    <MudTd>@context.TacklesWon / @context.Tackles</MudTd>
-                    <MudTd>@context.Interceptions</MudTd>
-                    <MudTd>@context.Saves</MudTd>
-                    <MudTd><MudChip T="string" Size="Size.Small" Class="ttf-chip--gold">@(context.MatchRating?.ToString("F1") ?? "-")</MudChip></MudTd>
-                </RowTemplate>
-            </MudTable>
-        }
+        <MudTabs Elevation="0" Color="Color.Warning">
+
+            <!-- MATCH FACTS -->
+            <MudTabPanel Text="MATCH FACTS">
+                @if (!_hasTeamStats)
+                {
+                    <MudText Typo="Typo.body2" Class="mdd__no-data">No match facts recorded.</MudText>
+                }
+                else
+                {
+                    <MudGrid Spacing="3" Class="mt-2">
+                        @StatRow("Possession %", Match.PossessionPct, null, "%")
+                        @StatRow("Shots", Match.ShotsFor, Match.ShotsAgainst, "")
+                        @StatRow("Passes Attempted", Match.PassesAttempted, null, "")
+                        @StatRow("Pass Accuracy %", Match.PassAccuracyPct, null, "%")
+                        @StatRow("Tackles", Match.TacklesFor, Match.TacklesAgainst, "")
+                    </MudGrid>
+                }
+            </MudTabPanel>
+
+            <!-- PLAYER STATS -->
+            <MudTabPanel Text="PLAYER STATS">
+                @if (!Match.PerformanceStats.Any())
+                {
+                    <MudText Typo="Typo.body2" Class="mdd__no-data">No player stats recorded.</MudText>
+                }
+                else
+                {
+                    <MudTable T="MatchPerformanceStat" Items="Match.PerformanceStats.OrderByDescending(s => s.MatchRating)"
+                              Dense="true" Elevation="0">
+                        <HeaderContent>
+                            <MudTh>Player</MudTh><MudTh>Pos</MudTh>
+                            <MudTh>⚽</MudTh><MudTh>🅰</MudTh>
+                            <MudTh>Pass%</MudTh><MudTh>Shot%</MudTh>
+                            <MudTh>Tackles</MudTh><MudTh>Int</MudTh><MudTh>Saves</MudTh>
+                            <MudTh>Rating</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd><MudText Typo="Typo.body2" Class="mdd__player-alias">@context.Player?.Alias</MudText></MudTd>
+                            <MudTd><MudChip T="string" Size="Size.Small" Class="ttf-chip--dark">@context.Player?.PrimaryPosition?.Code</MudChip></MudTd>
+                            <MudTd>@context.Goals</MudTd>
+                            <MudTd>@context.Assists</MudTd>
+                            <MudTd>@(context.PassAccuracyPct?.ToString("F0") ?? "-")%</MudTd>
+                            <MudTd>@(context.ShotAccuracyPct?.ToString("F0") ?? "-")%</MudTd>
+                            <MudTd>@context.TacklesWon/@context.Tackles</MudTd>
+                            <MudTd>@context.Interceptions</MudTd>
+                            <MudTd>@context.Saves</MudTd>
+                            <MudTd><MudChip T="string" Size="Size.Small" Class="ttf-chip--gold">@(context.MatchRating?.ToString("F1") ?? "-")</MudChip></MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                }
+            </MudTabPanel>
+
+        </MudTabs>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="@(() => MudDialog.Close(DialogResult.Ok(true)))" Variant="Variant.Text">Close</MudButton>
@@ -59,6 +83,27 @@
 @code {
     [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
     [Parameter] public Match Match { get; set; } = null!;
+
+    private bool _hasTeamStats => Match.PossessionPct.HasValue || Match.ShotsFor.HasValue ||
+                                   Match.PassAccuracyPct.HasValue || Match.TacklesFor.HasValue;
+
+    private RenderFragment StatRow(string label, object? ttfVal, object? oppVal, string unit) => __builder =>
+    {
+        <MudItem xs="12">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                <MudText Typo="Typo.body2" Style="min-width:160px">@label</MudText>
+                <MudChip T="string" Size="Size.Small" Class="ttf-chip--gold">
+                    TTF: @(ttfVal ?? "—")@unit
+                </MudChip>
+                @if (oppVal is not null)
+                {
+                    <MudChip T="string" Size="Size.Small" Class="ttf-chip--dark">
+                        OPP: @oppVal@unit
+                    </MudChip>
+                }
+            </MudStack>
+        </MudItem>
+    };
 
     private static string ResultChipClass(EMatchResult? r, EMatchStatus status)
     {

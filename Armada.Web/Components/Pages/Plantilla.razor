@@ -28,7 +28,7 @@
                         {
                             <div class="plantilla__list-row" @onclick="() => OpenStats(p)">
                                 <MudAvatar Class="plantilla__avatar plantilla__avatar--sm">
-                                    @p.Alias[..Math.Min(2, p.Alias.Length)].ToUpper()
+                                    @p.JerseyNumber.ToString()
                                 </MudAvatar>
                                 <div class="plantilla__list-info">
                                     <MudText Typo="Typo.body2" Class="plantilla__player-name">@p.Alias</MudText>

@@ -34,9 +34,12 @@
             <div class="manager__section-card">
                 <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-3">
                     <MudText Typo="Typo.caption" Class="manager__section-title">PLANTILLA</MudText>
-                    <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning" OnClick="OpenAddPlayer">
-                        + Add Player
-                    </MudButton>
+                    <MudStack Row="true" Spacing="1">
+                        <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning"
+                                   OnClick="OpenCsvAttributeImport">CSV Attrs</MudButton>
+                        <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning"
+                                   OnClick="OpenAddPlayer">+ Add Player</MudButton>
+                    </MudStack>
                 </MudStack>
                 <MudTable T="Player" Items="_players" Dense="true" Elevation="0">
                     <HeaderContent>
@@ -179,6 +182,15 @@
         parameters.Add("Player", p);
         await DialogService.ShowAsync<AddAttributeSnapshotDialog>($"Mental Attrs — {p.Alias}", parameters,
             new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseButton = true });
+    }
+
+    private async Task OpenCsvAttributeImport()
+    {
+        var parameters = new DialogParameters();
+        parameters.Add("Players", _players);
+        var dialog = await DialogService.ShowAsync<CsvAttributeUploadDialog>("CSV Attribute Import", parameters,
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseButton = true });
+        if (!(await dialog.Result)!.Canceled) await LoadDataAsync();
     }
 
     private async Task DeletePlayer(Player p)

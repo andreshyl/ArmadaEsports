@@ -14,5 +14,6 @@ public interface IMatchService
     Task AddPerformanceStatAsync(MatchPerformanceStat stat);
     Task DeleteAsync(int matchId);
     Task UpdateMatchFactsAsync(int matchId, byte? possession, byte? shotsFor, byte? shotsAgainst,
-        short? passesAttempted, byte? passAccuracy, byte? tacklesFor, byte? tacklesAgainst);
+        short? passesAttempted, byte? passAccuracy, byte? tacklesFor, byte? tacklesAgainst,
+        byte? possessionOpp = null, short? passesAttemptedOpp = null, byte? passAccuracyOpp = null);
 }

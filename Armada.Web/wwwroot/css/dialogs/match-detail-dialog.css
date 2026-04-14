@@ -1,5 +1,343 @@
-.mdd__score       { font-weight: 800 !important; color: var(--ttf-gold) !important; }
-.mdd__title       { font-weight: 700 !important; }
-.mdd__meta        { color: var(--ttf-grey) !important; }
-.mdd__no-data     { color: var(--ttf-grey) !important; padding: 16px 0 !important; }
-.mdd__player-alias { font-weight: 600 !important; }
+/* ── Shell ─────────────────────────────────── */
+.mdd__tabs .mud-tabs-toolbar {
+    border-bottom: 1px solid var(--ttf-border);
+}
+
+.mdd__close-btn {
+    letter-spacing: 2px;
+    font-size: 0.75rem;
+}
+
+/* ── Header ─────────────────────────────────── */
+.mdd__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 4px 0;
+}
+
+.mdd__header-left {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.mdd__header-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.72rem;
+    color: var(--ttf-grey);
+}
+
+.mdd__matchday {
+    color: rgba(255,255,255,0.65);
+    font-weight: 600;
+}
+
+.mdd__dot {
+    opacity: 0.3;
+}
+
+/* Result badge */
+.mdd__result-badge {
+    display: inline-block;
+    font-size: 0.7rem;
+    letter-spacing: 3px;
+    padding: 2px 10px;
+    border-radius: 2px;
+    width: fit-content;
+    font-weight: 700;
+}
+
+.mdd__result-badge--w {
+    background: rgba(74,222,128,0.12);
+    color: #4ade80;
+    border: 1px solid rgba(74,222,128,0.35);
+}
+
+.mdd__result-badge--d {
+    background: rgba(201,162,39,0.12);
+    color: var(--ttf-gold);
+    border: 1px solid rgba(201,162,39,0.35);
+}
+
+.mdd__result-badge--l {
+    background: rgba(248,113,113,0.12);
+    color: #f87171;
+    border: 1px solid rgba(248,113,113,0.35);
+}
+
+.mdd__result-badge--upcoming {
+    background: rgba(255,255,255,0.05);
+    color: var(--ttf-grey);
+    border: 1px solid var(--ttf-border);
+}
+
+/* Scoreboard */
+.mdd__scoreboard {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.mdd__score-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.mdd__score-team {
+    font-size: 0.58rem;
+    letter-spacing: 2px;
+    font-weight: 700;
+    color: var(--ttf-grey);
+    text-transform: uppercase;
+    max-width: 80px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mdd__score-num {
+    font-size: 2.2rem;
+    line-height: 1;
+    font-weight: 800;
+}
+
+.mdd__score-num--us {
+    color: var(--ttf-gold);
+}
+
+.mdd__score-num--opp {
+    color: var(--ttf-grey);
+}
+
+.mdd__score-sep {
+    font-size: 1.4rem;
+    color: var(--ttf-border);
+    padding-bottom: 18px;
+}
+
+/* ── Match Facts ─────────────────────────────── */
+.mdd__facts-header {
+    display: flex;
+    align-items: center;
+    padding: 8px 0 12px;
+    border-bottom: 1px solid var(--ttf-border);
+    margin-bottom: 4px;
+}
+
+.mdd__facts-spacer {
+    flex: 1;
+}
+
+.mdd__facts-team {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+.mdd__facts-team--us {
+    color: var(--ttf-gold);
+}
+
+.mdd__facts-team--opp {
+    color: var(--ttf-grey);
+}
+
+.mdd__facts-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.mdd__stat-row {
+    display: grid;
+    grid-template-columns: 1fr 90px 1fr;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--ttf-border);
+}
+
+    .mdd__stat-row:last-child {
+        border-bottom: none;
+    }
+
+.mdd__side {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.mdd__side--us {
+    justify-content: flex-end;
+}
+
+.mdd__side--opp {
+    justify-content: flex-start;
+}
+
+.mdd__val {
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.mdd__val--us {
+    color: var(--ttf-gold);
+}
+
+.mdd__val--opp {
+    color: var(--ttf-grey);
+}
+
+.mdd__bar {
+    height: 5px;
+    border-radius: 3px;
+    min-width: 4px;
+    width: var(--bar-w, 4px);
+}
+
+.mdd__bar--us {
+    background: var(--ttf-gold);
+}
+
+.mdd__bar--opp {
+    background: var(--ttf-border);
+}
+
+.mdd__stat-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.mdd__stat-label {
+    font-size: 0.58rem;
+    letter-spacing: 1.5px;
+    color: var(--ttf-grey);
+    text-transform: uppercase;
+    text-align: center;
+    white-space: nowrap;
+}
+
+/* ── Player table ────────────────────────────── */
+.mdd__table {
+    margin-top: 8px;
+}
+
+    .mdd__table .mud-table-head th {
+        font-size: 0.62rem;
+        letter-spacing: 1px;
+        color: var(--ttf-grey);
+    }
+
+    .mdd__table .mud-table-row:hover {
+        background: var(--ttf-off-white);
+    }
+
+.mdd__player-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.mdd__player-avatar {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: rgba(201,162,39,0.12);
+    border: 1px solid rgba(201,162,39,0.3);
+    color: var(--ttf-gold);
+    font-size: 0.52rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.mdd__player-alias {
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.mdd__pos-badge {
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    padding: 2px 6px;
+    border-radius: 2px;
+    background: var(--ttf-off-white);
+    color: var(--ttf-grey);
+    border: 1px solid var(--ttf-border);
+}
+
+.mdd__stat-num {
+    font-size: 0.8rem;
+    color: var(--ttf-grey);
+}
+
+.mdd__pass {
+    font-size: 0.8rem;
+}
+
+.mdd__pass--hi {
+    color: #4ade80;
+    font-weight: 700;
+}
+
+.mdd__pass--ok {
+    color: var(--ttf-gold);
+    font-weight: 600;
+}
+
+.mdd__pass--lo {
+    color: var(--ttf-grey);
+}
+
+.mdd__rating {
+    font-size: 0.82rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 3px;
+}
+
+.mdd__rating--hi {
+    background: rgba(74,222,128,0.12);
+    color: #4ade80;
+    border: 1px solid rgba(74,222,128,0.3);
+}
+
+.mdd__rating--ok {
+    background: rgba(201,162,39,0.12);
+    color: var(--ttf-gold);
+    border: 1px solid rgba(201,162,39,0.3);
+}
+
+.mdd__rating--lo {
+    background: var(--ttf-off-white);
+    color: var(--ttf-grey);
+    border: 1px solid var(--ttf-border);
+}
+
+/* ── Empty state ─────────────────────────────── */
+.mdd__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 0;
+    gap: 8px;
+    color: var(--ttf-grey);
+}
+
+.mdd__empty-icon {
+    font-size: 2rem !important;
+    opacity: 0.3;
+}

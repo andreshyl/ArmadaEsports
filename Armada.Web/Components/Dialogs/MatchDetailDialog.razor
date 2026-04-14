@@ -1,82 +1,112 @@
 <MudDialog>
     <TitleContent>
-        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3">
-            <MudChip T="string" Class="@ResultChipClass(Match.Result, Match.Status)">
-                @(Match.Status == EMatchStatus.Upcoming ? "Upcoming" : Match.Result?.ToString())
-            </MudChip>
-            <div>
-                <MudText Typo="Typo.h6" Class="mdd__title">TTF Esports vs @Match.OpponentName</MudText>
-                <MudText Typo="Typo.caption" Class="mdd__meta">
-                    @Match.MatchdayLabel &nbsp;·&nbsp;
-                    @(Match.Venue == EVenue.Home ? "Home" : "Away") &nbsp;·&nbsp;
-                    @Match.MatchDate.ToString("dd MMM yyyy")
-                </MudText>
+        <div class="mdd__header">
+            <div class="mdd__header-left">
+                <span class="mdd__result-badge mdd__result-badge--@(Match.Status == EMatchStatus.Upcoming ? "upcoming" : Match.Result?.ToString()?.ToLower() ?? "")">
+                    @(Match.Status == EMatchStatus.Upcoming ? "UPCOMING" : Match.Result?.ToString())
+                </span>
+                <div class="mdd__header-meta">
+                    <span class="mdd__matchday">@Match.MatchdayLabel</span>
+                    <span class="mdd__dot">·</span>
+                    <span>@(Match.Venue == EVenue.Home ? "Home" : "Away")</span>
+                    <span class="mdd__dot">·</span>
+                    <span>@Match.MatchDate.ToString("dd MMM yyyy")</span>
+                </div>
             </div>
             @if (Match.Status == EMatchStatus.Finished)
             {
-                <MudSpacer />
-                <MudText Typo="Typo.h4" Class="mdd__score">@Match.GoalsFor — @Match.GoalsAgainst</MudText>
+                <div class="mdd__scoreboard">
+                    <div class="mdd__score-block">
+                        <span class="mdd__score-team">TTF</span>
+                        <span class="mdd__score-num mdd__score-num--us">@Match.GoalsFor</span>
+                    </div>
+                    <span class="mdd__score-sep">—</span>
+                    <div class="mdd__score-block">
+                        <span class="mdd__score-num mdd__score-num--opp">@Match.GoalsAgainst</span>
+                        <span class="mdd__score-team">@Match.OpponentName.ToUpper()</span>
+                    </div>
+                </div>
             }
-        </MudStack>
+        </div>
     </TitleContent>
     <DialogContent>
-        <MudTabs Elevation="0" Color="Color.Warning">
+        <MudTabs Elevation="0" Color="Color.Warning" Class="mdd__tabs">
 
-            <!-- MATCH FACTS -->
             <MudTabPanel Text="MATCH FACTS">
                 @if (!_hasTeamStats)
                 {
-                    <MudText Typo="Typo.body2" Class="mdd__no-data">No match facts recorded.</MudText>
+                    <div class="mdd__empty">
+                        <MudIcon Icon="@Icons.Material.Outlined.BarChart" Class="mdd__empty-icon" />
+                        <MudText Typo="Typo.body2">No match facts recorded.</MudText>
+                    </div>
                 }
                 else
                 {
-                    <MudGrid Spacing="3" Class="mt-2">
-                        @StatRow("Possession %", Match.PossessionPct, null, "%")
-                        @StatRow("Shots", Match.ShotsFor, Match.ShotsAgainst, "")
-                        @StatRow("Passes Attempted", Match.PassesAttempted, null, "")
-                        @StatRow("Pass Accuracy %", Match.PassAccuracyPct, null, "%")
-                        @StatRow("Tackles", Match.TacklesFor, Match.TacklesAgainst, "")
-                    </MudGrid>
+                    <div class="mdd__facts-header">
+                        <span class="mdd__facts-team mdd__facts-team--us">TTF ESPORTS</span>
+                        <span class="mdd__facts-spacer"></span>
+                        <span class="mdd__facts-team mdd__facts-team--opp">@Match.OpponentName.ToUpper()</span>
+                    </div>
+                    <div class="mdd__facts-list">
+                        @StatBar("Possession", Match.PossessionPct, Match.PossessionPctOpp, "%")
+                        @StatBar("Shots", Match.ShotsFor, Match.ShotsAgainst, "")
+                        @StatBar("Passes", Match.PassesAttempted, Match.PassesAttemptedOpp, "")
+                        @StatBar("Pass Accuracy", Match.PassAccuracyPct, Match.PassAccuracyPctOpp, "%")
+                        @StatBar("Tackles", Match.TacklesFor, Match.TacklesAgainst, "")
+                    </div>
                 }
             </MudTabPanel>
 
-            <!-- PLAYER STATS -->
             <MudTabPanel Text="PLAYER STATS">
                 @if (!Match.PerformanceStats.Any())
                 {
-                    <MudText Typo="Typo.body2" Class="mdd__no-data">No player stats recorded.</MudText>
+                    <div class="mdd__empty">
+                        <MudIcon Icon="@Icons.Material.Outlined.People" Class="mdd__empty-icon" />
+                        <MudText Typo="Typo.body2">No player stats recorded.</MudText>
+                    </div>
                 }
                 else
                 {
-                    <MudTable T="MatchPerformanceStat" Items="Match.PerformanceStats.OrderByDescending(s => s.MatchRating)"
-                              Dense="true" Elevation="0">
+                    <MudTable T="MatchPerformanceStat"
+                              Items="Match.PerformanceStats.OrderByDescending(s => s.MatchRating)"
+                              Dense="true" Elevation="0" Class="mdd__table">
                         <HeaderContent>
-                            <MudTh>Player</MudTh><MudTh>Pos</MudTh>
-                            <MudTh>⚽</MudTh><MudTh>🅰</MudTh>
-                            <MudTh>Pass%</MudTh><MudTh>Shot%</MudTh>
-                            <MudTh>Tackles</MudTh><MudTh>Int</MudTh><MudTh>Saves</MudTh>
+                            <MudTh>Player</MudTh>
+                            <MudTh>Pos</MudTh>
+                            <MudTh>⚽</MudTh>
+                            <MudTh>🅰</MudTh>
+                            <MudTh>Pass%</MudTh>
+                            <MudTh>Shot%</MudTh>
+                            <MudTh>Tkl</MudTh>
+                            <MudTh>Int</MudTh>
+                            <MudTh>Saves</MudTh>
                             <MudTh>Rating</MudTh>
                         </HeaderContent>
                         <RowTemplate>
-                            <MudTd><MudText Typo="Typo.body2" Class="mdd__player-alias">@context.Player?.Alias</MudText></MudTd>
-                            <MudTd><MudChip T="string" Size="Size.Small" Class="ttf-chip--dark">@context.Player?.PrimaryPosition?.Code</MudChip></MudTd>
-                            <MudTd>@context.Goals</MudTd>
-                            <MudTd>@context.Assists</MudTd>
-                            <MudTd>@(context.PassAccuracyPct?.ToString("F0") ?? "-")%</MudTd>
-                            <MudTd>@(context.ShotAccuracyPct?.ToString("F0") ?? "-")%</MudTd>
-                            <MudTd>@context.TacklesWon/@context.Tackles</MudTd>
-                            <MudTd>@context.Interceptions</MudTd>
-                            <MudTd>@context.Saves</MudTd>
-                            <MudTd><MudChip T="string" Size="Size.Small" Class="ttf-chip--gold">@(context.MatchRating?.ToString("F1") ?? "-")</MudChip></MudTd>
+                            <MudTd>
+                                <div class="mdd__player-cell">
+                                    <span class="mdd__player-avatar">@context.Player?.JerseyNumber</span>
+                                    <span class="mdd__player-alias">@context.Player?.Alias</span>
+                                </div>
+                            </MudTd>
+                            <MudTd><span class="mdd__pos-badge">@context.Player?.PrimaryPosition?.Code</span></MudTd>
+                            <MudTd><span class="mdd__stat-num">@context.Goals</span></MudTd>
+                            <MudTd><span class="mdd__stat-num">@context.Assists</span></MudTd>
+                            <MudTd><span class="@PassClass(context.PassAccuracyPct)">@(context.PassAccuracyPct?.ToString("F0") ?? "—")%</span></MudTd>
+                            <MudTd><span class="mdd__stat-num">@(context.ShotAccuracyPct?.ToString("F0") ?? "—")%</span></MudTd>
+                            <MudTd><span class="mdd__stat-num">@context.TacklesWon/@context.Tackles</span></MudTd>
+                            <MudTd><span class="mdd__stat-num">@context.Interceptions</span></MudTd>
+                            <MudTd><span class="mdd__stat-num">@context.Saves</span></MudTd>
+                            <MudTd><span class="@RatingClass(context.MatchRating)">@(context.MatchRating?.ToString("F1") ?? "—")</span></MudTd>
                         </RowTemplate>
                     </MudTable>
                 }
             </MudTabPanel>
-
         </MudTabs>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="@(() => MudDialog.Close(DialogResult.Ok(true)))" Variant="Variant.Text">Close</MudButton>
+        <MudButton OnClick="@(() => MudDialog.Close(DialogResult.Ok(true)))"
+                   Variant="Variant.Text" Class="mdd__close-btn">Close</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -87,33 +117,40 @@
     private bool _hasTeamStats => Match.PossessionPct.HasValue || Match.ShotsFor.HasValue ||
                                    Match.PassAccuracyPct.HasValue || Match.TacklesFor.HasValue;
 
-    private RenderFragment StatRow(string label, object? ttfVal, object? oppVal, string unit) => __builder =>
+    private RenderFragment StatBar(string label, object? ttfVal, object? oppVal, string unit) => __builder =>
     {
-        <MudItem xs="12">
-            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                <MudText Typo="Typo.body2" Style="min-width:160px">@label</MudText>
-                <MudChip T="string" Size="Size.Small" Class="ttf-chip--gold">
-                    TTF: @(ttfVal ?? "—")@unit
-                </MudChip>
-                @if (oppVal is not null)
-                {
-                    <MudChip T="string" Size="Size.Small" Class="ttf-chip--dark">
-                        OPP: @oppVal@unit
-                    </MudChip>
-                }
-            </MudStack>
-        </MudItem>
+        var ttfNum = ttfVal is not null ? Convert.ToDouble(ttfVal) : (double?)null;
+        var oppNum = oppVal is not null ? Convert.ToDouble(oppVal) : (double?)null;
+        var total = (ttfNum ?? 0) + (oppNum ?? 0);
+        var ttfPct = total > 0 ? (ttfNum ?? 0) / total * 100 : 50;
+        var oppPct = total > 0 ? (oppNum ?? 0) / total * 100 : 50;
+
+        <div class="mdd__stat-row">
+            <div class="mdd__side mdd__side--us">
+                <span class="mdd__val mdd__val--us">@(ttfVal is not null ? $"{ttfVal}{unit}" : "—")</span>
+                <div class="mdd__bar mdd__bar--us" style="--bar-w:@(Math.Max(4, ttfPct * 0.8))px"></div>
+            </div>
+            <div class="mdd__stat-center">
+                <span class="mdd__stat-label">@label</span>
+            </div>
+            <div class="mdd__side mdd__side--opp">
+                <div class="mdd__bar mdd__bar--opp" style="--bar-w:@(Math.Max(4, oppPct * 0.8))px"></div>
+                <span class="mdd__val mdd__val--opp">@(oppVal is not null ? $"{oppVal}{unit}" : "—")</span>
+            </div>
+        </div>
     };
 
-    private static string ResultChipClass(EMatchResult? r, EMatchStatus status)
+    private string PassClass(decimal? v) => v switch
     {
-        if (status == EMatchStatus.Upcoming) return "";
-        return r switch
-        {
-            EMatchResult.W => "ttf-chip--win",
-            EMatchResult.D => "ttf-chip--draw",
-            EMatchResult.L => "ttf-chip--loss",
-            _ => ""
-        };
-    }
+        >= 85 => "mdd__pass mdd__pass--hi",
+        >= 70 => "mdd__pass mdd__pass--ok",
+        _ => "mdd__pass mdd__pass--lo"
+    };
+
+    private string RatingClass(decimal? v) => v switch
+    {
+        >= 7.5m => "mdd__rating mdd__rating--hi",
+        >= 6.0m => "mdd__rating mdd__rating--ok",
+        _ => "mdd__rating mdd__rating--lo"
+    };
 }

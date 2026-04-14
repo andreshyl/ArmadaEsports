@@ -24,6 +24,9 @@ public class Match : BaseAuditableEntity
     public byte? PassAccuracyPct { get; set; }
     public byte? TacklesFor { get; set; }
     public byte? TacklesAgainst { get; set; }
+    public byte? PossessionPctOpp { get; set; }
+    public short? PassesAttemptedOpp { get; set; }
+    public byte? PassAccuracyPctOpp { get; set; }
 
     public Competition Competition { get; set; } = null!;
     public ICollection<MatchPerformanceStat> PerformanceStats { get; set; } = [];

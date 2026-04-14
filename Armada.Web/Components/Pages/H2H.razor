@@ -6,9 +6,9 @@
 <MudContainer MaxWidth="MaxWidth.Large" Class="ttf-page">
     <MudText Typo="Typo.overline" Class="ttf-section-label">HEAD TO HEAD</MudText>
 
-    <MudGrid Spacing="3" Class="mb-8">
+    <MudGrid Spacing="3" Class="mb-6">
         <MudItem xs="5">
-            <MudSelect T="int?" Label="Player A" @bind-Value="_playerAId" @bind-Value:after="Refresh" Variant="Variant.Outlined">
+            <MudSelect T="int?" Label="Player A" @bind-Value="_playerAId" @bind-Value:after="Refresh" Variant="Variant.Outlined" FullWidth="true">
                 @foreach (var p in _players)
                 {
                     <MudSelectItem T="int?" Value="@((int?)p.Id)">@p.Alias (@p.PrimaryPosition?.Code)</MudSelectItem>
@@ -19,7 +19,7 @@
             <MudText Typo="Typo.h5" Class="h2h__vs-label">VS</MudText>
         </MudItem>
         <MudItem xs="5">
-            <MudSelect T="int?" Label="Player B" @bind-Value="_playerBId" @bind-Value:after="Refresh" Variant="Variant.Outlined">
+            <MudSelect T="int?" Label="Player B" @bind-Value="_playerBId" @bind-Value:after="Refresh" Variant="Variant.Outlined" FullWidth="true">
                 @foreach (var p in _players)
                 {
                     <MudSelectItem T="int?" Value="@((int?)p.Id)">@p.Alias (@p.PrimaryPosition?.Code)</MudSelectItem>
@@ -32,46 +32,42 @@
     {
         <MudText Typo="Typo.caption" Class="ttf-subsection-label">ATRIBUTOS MENTALES</MudText>
 
+        <div class="h2h__attr-names-row">
+            <span class="h2h__player-name h2h__player-name--a">@_playerA.Alias.ToUpper()</span>
+            <span class="h2h__attr-name-spacer"></span>
+            <span class="h2h__player-name h2h__player-name--b">@_playerB.Alias.ToUpper()</span>
+        </div>
+
         @for (int i = 0; i < _attrNames.Length; i++)
         {
             var idx = i;
             var scoreA = _snapshotA?.Scores.FirstOrDefault(s => s.AttributeIndex == idx)?.Score ?? 0;
             var scoreB = _snapshotB?.Scores.FirstOrDefault(s => s.AttributeIndex == idx)?.Score ?? 0;
 
-            <MudGrid Spacing="2" Class="mb-2" AlignItems="AlignItems.Center">
-                <MudItem xs="1" Class="text-right">
-                    <MudText Typo="Typo.body2" Class="@(scoreA > scoreB ? "h2h__attr-val--winner" : "h2h__attr-val--loser")">@scoreA</MudText>
-                </MudItem>
-                <MudItem xs="4">
-                    <MudProgressLinear Value="@(scoreA * 10)" Color="Color.Warning" Rounded="true" Reverse="true" />
-                </MudItem>
-                <MudItem xs="2" Class="text-center">
-                    <MudText Typo="Typo.caption">@_attrNames[idx]</MudText>
-                </MudItem>
-                <MudItem xs="4">
-                    <MudProgressLinear Value="@(scoreB * 10)" Color="Color.Warning" Rounded="true" />
-                </MudItem>
-                <MudItem xs="1">
-                    <MudText Typo="Typo.body2" Class="@(scoreB > scoreA ? "h2h__attr-val--winner" : "h2h__attr-val--loser")">@scoreB</MudText>
-                </MudItem>
-            </MudGrid>
+            <div class="h2h__attr-row">
+                <span class="h2h__attr-val @(scoreA > scoreB ? "h2h__attr-val--winner" : "h2h__attr-val--loser") h2h__attr-val--a">@scoreA</span>
+                <div class="h2h__bar-wrap h2h__bar-wrap--a">
+                    <MudProgressLinear Value="@(scoreA * 10)" Color="Color.Warning" Rounded="true" Reverse="true" Size="Size.Small" />
+                </div>
+                <span class="h2h__attr-label">@_attrNames[idx]</span>
+                <div class="h2h__bar-wrap h2h__bar-wrap--b">
+                    <MudProgressLinear Value="@(scoreB * 10)" Color="Color.Warning" Rounded="true" Size="Size.Small" />
+                </div>
+                <span class="h2h__attr-val @(scoreB > scoreA ? "h2h__attr-val--winner" : "h2h__attr-val--loser") h2h__attr-val--b">@scoreB</span>
+            </div>
         }
 
-        <MudDivider Class="my-4" />
-
-        <MudGrid Spacing="2" AlignItems="AlignItems.Center" Class="mb-8">
-            <MudItem xs="5" Class="text-center">
-                <MudText Typo="Typo.h4" Class="h2h__overall-value">@(_snapshotA?.OverallRating.ToString("F1") ?? "—")</MudText>
-                <MudText Typo="Typo.caption" Class="h2h__overall-alias">@_playerA.Alias</MudText>
-            </MudItem>
-            <MudItem xs="2" Class="text-center">
-                <MudText Typo="Typo.caption" Class="h2h__overall-label">OVERALL</MudText>
-            </MudItem>
-            <MudItem xs="5" Class="text-center">
-                <MudText Typo="Typo.h4" Class="h2h__overall-value">@(_snapshotB?.OverallRating.ToString("F1") ?? "—")</MudText>
-                <MudText Typo="Typo.caption" Class="h2h__overall-alias">@_playerB.Alias</MudText>
-            </MudItem>
-        </MudGrid>
+        <div class="h2h__overall-block">
+            <div class="h2h__overall-side">
+                <span class="h2h__overall-value @(_overallA > _overallB ? "" : "h2h__overall-value--loser")">@(_snapshotA?.OverallRating.ToString("F1") ?? "—")</span>
+                <span class="h2h__overall-alias">@_playerA.Alias</span>
+            </div>
+            <span class="h2h__overall-label">OVERALL</span>
+            <div class="h2h__overall-side">
+                <span class="h2h__overall-value @(_overallB > _overallA ? "" : "h2h__overall-value--loser")">@(_snapshotB?.OverallRating.ToString("F1") ?? "—")</span>
+                <span class="h2h__overall-alias">@_playerB.Alias</span>
+            </div>
+        </div>
 
         <MudText Typo="Typo.caption" Class="ttf-subsection-label">RENDIMIENTO (PROMEDIO)</MudText>
 
@@ -81,10 +77,10 @@
                 <MudItem xs="6" sm="4" md="2">
                     <div class="h2h__perf-card">
                         <MudText Typo="Typo.caption" Class="h2h__perf-label">@stat.Label</MudText>
-                        <MudStack Row="true" Justify="Justify.Center" Spacing="2" AlignItems="AlignItems.Center">
-                            <MudText Typo="Typo.h6" Class="@(stat.A > stat.B ? "h2h__perf-val--winner" : "h2h__perf-val--loser")">@stat.A.ToString("F1")</MudText>
+                        <MudStack Row="true" Justify="Justify.Center" AlignItems="AlignItems.Center" Spacing="1">
+                            <MudText Typo="Typo.h6" Class="@(stat.A >= stat.B ? "h2h__perf-val--winner" : "h2h__perf-val--loser")">@stat.A.ToString("F1")</MudText>
                             <MudText Typo="Typo.body2" Class="h2h__separator">·</MudText>
-                            <MudText Typo="Typo.h6" Class="@(stat.B > stat.A ? "h2h__perf-val--winner" : "h2h__perf-val--loser")">@stat.B.ToString("F1")</MudText>
+                            <MudText Typo="Typo.h6" Class="@(stat.B >= stat.A ? "h2h__perf-val--winner" : "h2h__perf-val--loser")">@stat.B.ToString("F1")</MudText>
                         </MudStack>
                     </div>
                 </MudItem>
@@ -98,6 +94,7 @@
     private int? _playerAId, _playerBId;
     private Player? _playerA, _playerB;
     private PlayerAttributeSnapshot? _snapshotA, _snapshotB;
+    private decimal _overallA, _overallB;
     private List<PerfStat> _perfStats = [];
 
     private static readonly string[] _attrNames =
@@ -118,21 +115,22 @@
 
         _snapshotA = _playerA.AttributeSnapshots.OrderByDescending(s => s.SnapshotDate).FirstOrDefault();
         _snapshotB = _playerB.AttributeSnapshots.OrderByDescending(s => s.SnapshotDate).FirstOrDefault();
+        _overallA = _snapshotA?.OverallRating ?? 0;
+        _overallB = _snapshotB?.OverallRating ?? 0;
 
         static double Avg(IEnumerable<MatchPerformanceStat> s, Func<MatchPerformanceStat, double> f)
             => s.Any() ? s.Average(f) : 0;
 
         var sA = _playerA.PerformanceStats;
         var sB = _playerB.PerformanceStats;
-
         _perfStats =
         [
-            new("Goles",       Avg(sA, s => s.Goals),                          Avg(sB, s => s.Goals)),
-            new("Asistencias", Avg(sA, s => s.Assists),                         Avg(sB, s => s.Assists)),
-            new("Pase %",      Avg(sA, s => (double)(s.PassAccuracyPct ?? 0)),  Avg(sB, s => (double)(s.PassAccuracyPct ?? 0))),
-            new("Tiro %",      Avg(sA, s => (double)(s.ShotAccuracyPct ?? 0)), Avg(sB, s => (double)(s.ShotAccuracyPct ?? 0))),
-            new("Tackles",     Avg(sA, s => s.TacklesWon),                      Avg(sB, s => s.TacklesWon)),
-            new("Rating",      Avg(sA, s => (double)(s.MatchRating ?? 0)),      Avg(sB, s => (double)(s.MatchRating ?? 0))),
+            new("Goles",       Avg(sA, s => s.Goals),                         Avg(sB, s => s.Goals)),
+            new("Asistencias", Avg(sA, s => s.Assists),                        Avg(sB, s => s.Assists)),
+            new("Pase %",      Avg(sA, s => (double)(s.PassAccuracyPct ?? 0)), Avg(sB, s => (double)(s.PassAccuracyPct ?? 0))),
+            new("Tiro %",      Avg(sA, s => (double)(s.ShotAccuracyPct ?? 0)),Avg(sB, s => (double)(s.ShotAccuracyPct ?? 0))),
+            new("Tackles",     Avg(sA, s => s.TacklesWon),                     Avg(sB, s => s.TacklesWon)),
+            new("Rating",      Avg(sA, s => (double)(s.MatchRating ?? 0)),     Avg(sB, s => (double)(s.MatchRating ?? 0))),
         ];
     }
 

@@ -1,1 +1,103 @@
-.fmd__result-preview { color: var(--ttf-gold); font-weight: 600; }
+.fmd__header {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.fmd__title {
+    font-size: 1rem;
+    letter-spacing: 4px;
+    color: var(--ttf-gold);
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.fmd__subtitle {
+    font-size: 0.65rem;
+    letter-spacing: 2px;
+    color: var(--ttf-grey);
+    text-transform: uppercase;
+}
+
+.fmd__scoreboard {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 24px 0 16px;
+}
+
+.fmd__score-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.fmd__team-label {
+    font-size: 0.6rem;
+    letter-spacing: 2px;
+    font-weight: 700;
+    color: var(--ttf-gold);
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 110px;
+}
+
+.fmd__team-label--opp {
+    color: var(--ttf-grey);
+}
+
+.fmd__score-input {
+    width: 90px;
+}
+
+.fmd__score-input--us input {
+    font-size: 2rem;
+    font-weight: 700;
+    text-align: center;
+    color: var(--ttf-gold);
+}
+
+.fmd__score-input--opp input {
+    font-size: 2rem;
+    font-weight: 700;
+    text-align: center;
+    color: var(--ttf-grey);
+}
+
+.fmd__dash {
+    font-size: 2.5rem;
+    color: var(--ttf-border);
+    padding-bottom: 20px;
+}
+
+.fmd__result-preview {
+    text-align: center;
+    font-size: 0.68rem;
+    letter-spacing: 3px;
+    font-weight: 700;
+    padding: 8px;
+    border-radius: 3px;
+    text-transform: uppercase;
+}
+
+.fmd__result-preview--w {
+    background: rgba(74,222,128,0.1);
+    color: #4ade80;
+    border: 1px solid rgba(74,222,128,0.25);
+}
+
+.fmd__result-preview--d {
+    background: rgba(201,162,39,0.1);
+    color: var(--ttf-gold);
+    border: 1px solid rgba(201,162,39,0.25);
+}
+
+.fmd__result-preview--l {
+    background: rgba(248,113,113,0.1);
+    color: #f87171;
+    border: 1px solid rgba(248,113,113,0.25);
+}

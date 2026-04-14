@@ -92,7 +92,8 @@ public class MatchService(ArmadaDbContext db) : IMatchService
     }
     public async Task UpdateMatchFactsAsync(int matchId, byte? possession, byte? shotsFor,
         byte? shotsAgainst, short? passesAttempted, byte? passAccuracy,
-        byte? tacklesFor, byte? tacklesAgainst)
+        byte? tacklesFor, byte? tacklesAgainst,
+        byte? possessionOpp = null, short? passesAttemptedOpp = null, byte? passAccuracyOpp = null)
     {
         var match = await db.Matches.FindAsync(matchId)
             ?? throw new KeyNotFoundException($"Match {matchId} not found.");
@@ -103,6 +104,9 @@ public class MatchService(ArmadaDbContext db) : IMatchService
         match.PassAccuracyPct = passAccuracy;
         match.TacklesFor = tacklesFor;
         match.TacklesAgainst = tacklesAgainst;
+        match.PossessionPctOpp = possessionOpp;
+        match.PassesAttemptedOpp = passesAttemptedOpp;
+        match.PassAccuracyPctOpp = passAccuracyOpp;
         await db.SaveChangesAsync();
     }
 

@@ -3,7 +3,8 @@
 <MudDialog>
     <DialogContent>
         <MudStack Spacing="3">
-            <MudSelect T="int" @bind-Value="_matchId" Label="Match" Variant="Variant.Outlined" FullWidth="true">
+            <MudSelect T="int" @bind-Value="_matchId" Label="Match" Variant="Variant.Outlined"
+                       FullWidth="true" @bind-Value:after="OnMatchSelected">
                 @foreach (var m in Matches.Where(m => m.Status == EMatchStatus.Finished))
                 {
                     <MudSelectItem T="int" Value="@m.Id">@m.MatchDate.ToString("dd MMM") — vs @m.OpponentName</MudSelectItem>
@@ -12,27 +13,63 @@
 
             <MudDivider />
 
+            @* Column headers *@
+            <MudGrid Spacing="0">
+                <MudItem xs="6">
+                    <MudText Typo="Typo.caption" Class="mmfd__col-label">TTF ESPORTS</MudText>
+                </MudItem>
+                <MudItem xs="6">
+                    <MudText Typo="Typo.caption" Class="mmfd__col-label mmfd__col-label--opp">@_opponentName</MudText>
+                </MudItem>
+            </MudGrid>
+
+            @* Possession *@
             <MudGrid Spacing="2">
                 <MudItem xs="6">
                     <MudNumericField T="byte?" @bind-Value="_possessionPct" Label="Possession %" Variant="Variant.Outlined" FullWidth="true" Min="0" Max="100" />
                 </MudItem>
                 <MudItem xs="6">
-                    <MudNumericField T="byte?" @bind-Value="_passAccuracyPct" Label="Pass Accuracy %" Variant="Variant.Outlined" FullWidth="true" Min="0" Max="100" />
+                    <MudNumericField T="byte?" @bind-Value="_possessionPctOpp" Label="Possession %" Variant="Variant.Outlined" FullWidth="true" Min="0" Max="100" />
+                </MudItem>
+            </MudGrid>
+
+            @* Shots *@
+            <MudGrid Spacing="2">
+                <MudItem xs="6">
+                    <MudNumericField T="byte?" @bind-Value="_shotsFor" Label="Shots" Variant="Variant.Outlined" FullWidth="true" Min="0" />
                 </MudItem>
                 <MudItem xs="6">
-                    <MudNumericField T="byte?" @bind-Value="_shotsFor" Label="Shots (AES)" Variant="Variant.Outlined" FullWidth="true" Min="0" />
+                    <MudNumericField T="byte?" @bind-Value="_shotsAgainst" Label="Shots" Variant="Variant.Outlined" FullWidth="true" Min="0" />
                 </MudItem>
-                <MudItem xs="6">
-                    <MudNumericField T="byte?" @bind-Value="_shotsAgainst" Label="Shots (Opponent)" Variant="Variant.Outlined" FullWidth="true" Min="0" />
-                </MudItem>
+            </MudGrid>
+
+            @* Passes *@
+            <MudGrid Spacing="2">
                 <MudItem xs="6">
                     <MudNumericField T="short?" @bind-Value="_passesAttempted" Label="Passes Attempted" Variant="Variant.Outlined" FullWidth="true" Min="0" />
                 </MudItem>
                 <MudItem xs="6">
-                    <MudNumericField T="byte?" @bind-Value="_tacklesFor" Label="Tackles (AES)" Variant="Variant.Outlined" FullWidth="true" Min="0" />
+                    <MudNumericField T="short?" @bind-Value="_passesAttemptedOpp" Label="Passes Attempted" Variant="Variant.Outlined" FullWidth="true" Min="0" />
+                </MudItem>
+            </MudGrid>
+
+            @* Pass Accuracy *@
+            <MudGrid Spacing="2">
+                <MudItem xs="6">
+                    <MudNumericField T="byte?" @bind-Value="_passAccuracyPct" Label="Pass Accuracy %" Variant="Variant.Outlined" FullWidth="true" Min="0" Max="100" />
                 </MudItem>
                 <MudItem xs="6">
-                    <MudNumericField T="byte?" @bind-Value="_tacklesAgainst" Label="Tackles (Opponent)" Variant="Variant.Outlined" FullWidth="true" Min="0" />
+                    <MudNumericField T="byte?" @bind-Value="_passAccuracyPctOpp" Label="Pass Accuracy %" Variant="Variant.Outlined" FullWidth="true" Min="0" Max="100" />
+                </MudItem>
+            </MudGrid>
+
+            @* Tackles *@
+            <MudGrid Spacing="2">
+                <MudItem xs="6">
+                    <MudNumericField T="byte?" @bind-Value="_tacklesFor" Label="Tackles" Variant="Variant.Outlined" FullWidth="true" Min="0" />
+                </MudItem>
+                <MudItem xs="6">
+                    <MudNumericField T="byte?" @bind-Value="_tacklesAgainst" Label="Tackles" Variant="Variant.Outlined" FullWidth="true" Min="0" />
                 </MudItem>
             </MudGrid>
 
@@ -54,21 +91,28 @@
     [Parameter] public List<Match> Matches { get; set; } = [];
 
     private int _matchId;
+    private string _opponentName = "OPPONENT";
+
     private byte? _possessionPct;
     private byte? _shotsFor;
-    private byte? _shotsAgainst;
     private short? _passesAttempted;
     private byte? _passAccuracyPct;
     private byte? _tacklesFor;
+
+    private byte? _possessionPctOpp;
+    private byte? _shotsAgainst;
+    private short? _passesAttemptedOpp;
+    private byte? _passAccuracyPctOpp;
     private byte? _tacklesAgainst;
+
     private string? _error;
     private bool _saving;
 
-    protected override void OnParametersSet()
+    private void OnMatchSelected()
     {
-        // Pre-fill if match already has facts
         var match = Matches.FirstOrDefault(m => m.Id == _matchId);
         if (match is null) return;
+        _opponentName = match.OpponentName.ToUpper();
         _possessionPct = match.PossessionPct;
         _shotsFor = match.ShotsFor;
         _shotsAgainst = match.ShotsAgainst;
@@ -76,6 +120,9 @@
         _passAccuracyPct = match.PassAccuracyPct;
         _tacklesFor = match.TacklesFor;
         _tacklesAgainst = match.TacklesAgainst;
+        _possessionPctOpp = match.PossessionPctOpp;
+        _passesAttemptedOpp = match.PassesAttemptedOpp;
+        _passAccuracyPctOpp = match.PassAccuracyPctOpp;
     }
 
     private async Task Save()
@@ -84,17 +131,14 @@
         _saving = true;
         try
         {
-            await MatchService.UpdateMatchFactsAsync(_matchId, _possessionPct, _shotsFor,
-                _shotsAgainst, _passesAttempted, _passAccuracyPct, _tacklesFor, _tacklesAgainst);
+            await MatchService.UpdateMatchFactsAsync(_matchId,
+                _possessionPct, _shotsFor, _shotsAgainst,
+                _passesAttempted, _passAccuracyPct,
+                _tacklesFor, _tacklesAgainst,
+                _possessionPctOpp, _passesAttemptedOpp, _passAccuracyPctOpp);
             MudDialog.Close(DialogResult.Ok(true));
         }
-        catch (Exception ex)
-        {
-            _error = ex.Message;
-        }
-        finally
-        {
-            _saving = false;
-        }
+        catch (Exception ex) { _error = ex.Message; }
+        finally { _saving = false; }
     }
 }

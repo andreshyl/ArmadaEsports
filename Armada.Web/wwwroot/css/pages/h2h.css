@@ -1,19 +1,177 @@
-.h2h__vs-label            { font-weight: 800 !important; color: var(--ttf-gold) !important; }
-.h2h__attr-val--winner    { font-weight: 700 !important; color: var(--ttf-gold) !important; }
-.h2h__attr-val--loser     { color: var(--ttf-grey) !important; }
-.h2h__overall-value       { font-weight: 800 !important; color: var(--ttf-gold) !important; }
-.h2h__overall-label       { color: var(--ttf-grey) !important; letter-spacing: 1px !important; }
-.h2h__overall-alias       { color: var(--ttf-grey) !important; }
-.h2h__separator           { color: var(--ttf-grey) !important; }
-
-.h2h__perf-card {
-  background: var(--ttf-white);
-  border-radius: var(--ttf-radius-md);
-  border: 1px solid var(--ttf-border);
-  padding: 12px;
-  text-align: center;
+/* ── Selector row ─────────────────────────────── */
+.h2h__vs-label {
+    font-weight: 800 !important;
+    color: var(--ttf-gold) !important;
+    text-align: center;
+    letter-spacing: 3px;
+    display: block;
 }
 
-.h2h__perf-label      { color: var(--ttf-grey) !important; letter-spacing: 1px !important; display: block !important; margin-bottom: 4px !important; }
-.h2h__perf-val--winner { font-weight: 800 !important; color: var(--ttf-gold) !important; }
-.h2h__perf-val--loser  { font-weight: 500 !important; color: var(--ttf-black) !important; }
+/* ── Player name headers ──────────────────────── */
+.h2h__attr-names-row {
+    display: grid;
+    grid-template-columns: 28px 1fr 120px 1fr 28px;
+    align-items: center;
+    padding: 4px 0 10px;
+    border-bottom: 2px solid var(--ttf-gold);
+    margin-bottom: 4px;
+}
+
+.h2h__attr-name-spacer {
+}
+
+.h2h__player-name {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: var(--ttf-gold);
+}
+
+.h2h__player-name--a {
+    grid-column: 2;
+    text-align: right;
+}
+
+.h2h__player-name--b {
+    grid-column: 4;
+    text-align: left;
+}
+
+/* ── Attribute rows ───────────────────────────── */
+.h2h__attr-row {
+    display: grid;
+    grid-template-columns: 28px 1fr 120px 1fr 28px;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 0;
+    border-bottom: 0.5px solid var(--ttf-border);
+}
+
+    .h2h__attr-row:last-of-type {
+        border-bottom: none;
+    }
+
+.h2h__attr-val {
+    font-size: 0.85rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.h2h__attr-val--a {
+    text-align: right;
+}
+
+.h2h__attr-val--b {
+    text-align: left;
+}
+
+.h2h__attr-val--winner {
+    color: var(--ttf-gold) !important;
+}
+
+.h2h__attr-val--loser {
+    color: var(--ttf-grey) !important;
+}
+
+.h2h__bar-wrap {
+    display: flex;
+    align-items: center;
+}
+
+.h2h__bar-wrap--a {
+    justify-content: flex-end;
+}
+
+.h2h__bar-wrap--b {
+    justify-content: flex-start;
+}
+
+.h2h__bar-wrap .mud-progress-linear {
+    width: 100%;
+}
+
+.h2h__attr-label {
+    text-align: center;
+    font-size: 0.6rem;
+    letter-spacing: 1.5px;
+    color: var(--ttf-grey);
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+/* ── Overall ──────────────────────────────────── */
+.h2h__overall-block {
+    display: grid;
+    grid-template-columns: 1fr 100px 1fr;
+    align-items: center;
+    text-align: center;
+    padding: 16px 0;
+    border-top: 1px solid var(--ttf-border);
+    border-bottom: 1px solid var(--ttf-border);
+    margin: 16px 0;
+}
+
+.h2h__overall-side {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.h2h__overall-value {
+    font-size: 2rem !important;
+    font-weight: 800 !important;
+    color: var(--ttf-gold) !important;
+    line-height: 1.1;
+    display: block;
+}
+
+.h2h__overall-value--loser {
+    color: var(--ttf-grey) !important;
+}
+
+.h2h__overall-alias {
+    font-size: 0.65rem !important;
+    color: var(--ttf-grey) !important;
+    letter-spacing: 1px !important;
+    display: block;
+}
+
+.h2h__overall-label {
+    font-size: 0.6rem !important;
+    color: var(--ttf-grey) !important;
+    letter-spacing: 3px !important;
+    text-transform: uppercase;
+}
+
+/* ── Perf cards ───────────────────────────────── */
+.h2h__perf-card {
+    background: var(--ttf-white);
+    border-radius: var(--ttf-radius-md);
+    border: 1px solid var(--ttf-border);
+    padding: 14px 10px;
+    text-align: center;
+}
+
+.h2h__perf-label {
+    color: var(--ttf-grey) !important;
+    letter-spacing: 1px !important;
+    display: block !important;
+    margin-bottom: 6px !important;
+    font-size: 0.58rem !important;
+    text-transform: uppercase;
+}
+
+.h2h__perf-val--winner {
+    font-weight: 800 !important;
+    color: var(--ttf-gold) !important;
+}
+
+.h2h__perf-val--loser {
+    font-weight: 500 !important;
+    color: var(--ttf-grey) !important;
+}
+
+.h2h__separator {
+    color: var(--ttf-grey) !important;
+}

@@ -1,27 +1,33 @@
 @inject IMatchService MatchService
 
 <MudDialog>
+    <TitleContent>
+        <div class="fmd__header">
+            <span class="fmd__title">FINALIZAR PARTIDO</span>
+            <span class="fmd__subtitle">@Match.OpponentName.ToUpper()</span>
+        </div>
+    </TitleContent>
     <DialogContent>
-        <MudStack Spacing="3">
-            <MudText Typo="Typo.body1">
-                TTF Esports vs <strong>@Match.OpponentName</strong>
-            </MudText>
-            <MudGrid Spacing="2">
-                <MudItem xs="6">
-                    <MudNumericField T="int" @bind-Value="_goalsFor" Label="TTF Goals"
-                                     Variant="Variant.Outlined" FullWidth="true" Min="0" />
-                </MudItem>
-                <MudItem xs="6">
-                    <MudNumericField T="int" @bind-Value="_goalsAgainst" Label="Opponent Goals"
-                                     Variant="Variant.Outlined" FullWidth="true" Min="0" />
-                </MudItem>
-            </MudGrid>
-            <MudText Typo="Typo.caption" Class="fmd__result-preview">Result: @ResultPreview()</MudText>
-        </MudStack>
+        <div class="fmd__scoreboard">
+            <div class="fmd__score-col">
+                <span class="fmd__team-label">TTF ESPORTS</span>
+                <MudNumericField T="int" @bind-Value="_goalsFor" Variant="Variant.Outlined"
+                                 Min="0" Class="fmd__score-input fmd__score-input--us" />
+            </div>
+            <span class="fmd__dash">—</span>
+            <div class="fmd__score-col">
+                <span class="fmd__team-label fmd__team-label--opp">@Match.OpponentName.ToUpper()</span>
+                <MudNumericField T="int" @bind-Value="_goalsAgainst" Variant="Variant.Outlined"
+                                 Min="0" Class="fmd__score-input fmd__score-input--opp" />
+            </div>
+        </div>
+        <div class="fmd__result-preview fmd__result-preview--@ResultClass()">
+            @ResultPreview()
+        </div>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="@(() => MudDialog.Cancel())" Variant="Variant.Text">Cancel</MudButton>
-        <MudButton OnClick="Save" Variant="Variant.Filled" Color="Color.Warning">Confirm</MudButton>
+        <MudButton OnClick="Save" Variant="Variant.Filled" Color="Color.Warning">Confirm Result</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -34,9 +40,16 @@
 
     private string ResultPreview() => (_goalsFor, _goalsAgainst) switch
     {
-        var (f, a) when f > a => $"W — {f}:{a}",
-        var (f, a) when f < a => $"L — {f}:{a}",
-        var (f, a) => $"D — {f}:{a}",
+        var (f, a) when f > a => $"Victoria  {f} — {a}",
+        var (f, a) when f < a => $"Derrota  {f} — {a}",
+        var (f, a) => $"Empate  {f} — {a}",
+    };
+
+    private string ResultClass() => (_goalsFor, _goalsAgainst) switch
+    {
+        var (f, a) when f > a => "w",
+        var (f, a) when f < a => "l",
+        _ => "d",
     };
 
     private async Task Save()

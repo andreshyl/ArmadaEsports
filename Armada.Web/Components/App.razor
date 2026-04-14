@@ -47,7 +47,16 @@
 </head>
 
 <body>
-    <Routes @rendermode="InteractiveServer" />
+    <ErrorBoundary>
+        <ChildContent>
+            <Routes @rendermode="InteractiveServer" />
+        </ChildContent>
+        <ErrorContent Context="ex">
+            <div style="padding:2rem;color:#f87171;font-family:monospace;font-size:0.8rem;">
+                An error occurred. Please refresh the page.
+            </div>
+        </ErrorContent>
+    </ErrorBoundary>
     <ReconnectModal />
     <script src="@Assets["_framework/blazor.web.js"]"></script>
     <script src="@Assets["_content/MudBlazor/MudBlazor.min.js"]"></script>

@@ -15,7 +15,22 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddMudServices();
 
-builder.Services.AddDbContext<ArmadaDbContext>(options =>
+// SignalR: raise message size limit for image/CSV uploads and extend disconnect timeout
+builder.Services.AddSignalR(options =>
+{
+    options.MaximumReceiveMessageSize = 50 * 1024 * 1024; // 50 MB
+    options.ClientTimeoutInterval     = TimeSpan.FromSeconds(60);
+    options.HandshakeTimeout          = TimeSpan.FromSeconds(30);
+});
+
+builder.Services.AddServerSideBlazor(options =>
+{
+    options.DetailedErrors              = builder.Environment.IsDevelopment();
+    options.DisconnectedCircuitMaxRetained = 100;
+    options.DisconnectedCircuitRetentionPeriod = TimeSpan.FromMinutes(3);
+});
+
+builder.Services.AddDbContextPool<ArmadaDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("ArmadaDb")));
 
 // Auth

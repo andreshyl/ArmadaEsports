@@ -4,6 +4,7 @@ using ArmadaEsports.Data.Services;
 using ArmadaEsports.Web.Auth;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
 
@@ -32,6 +33,10 @@ builder.Services.AddScoped<IMatchService, MatchService>();
 builder.Services.AddScoped<ICompetitionService, CompetitionService>();
 builder.Services.AddScoped<IAttributeService, AttributeService>();
 builder.Services.AddScoped<IAiParserService, AiParserService>();
+
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo("/var/www/ttfesports-keys"))
+    .SetApplicationName("ttfesports");
 
 var app = builder.Build();
 

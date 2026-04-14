@@ -1,35 +1,37 @@
-@using Microsoft.AspNetCore.Components.Forms
+﻿@using Microsoft.AspNetCore.Components.Forms
 
 <MudDialog>
     <DialogContent>
         <MudStack Spacing="3">
 
             <MudExpansionPanels Elevation="0">
-                <MudExpansionPanel Text="CSV FORMAT" Class="cpid__panel">
-                    <MudText Typo="Typo.caption" Class="ttf-format-preview">alias,jersey_number,primary_position,secondary_position,tertiary_position
+                <MudExpansionPanel Text="CSV Format" Class="cpid__panel">
+                    <MudText Typo="Typo.caption" Class="cpid__format-preview">
+                        alias,jersey_number,primary_position,secondary_position,tertiary_position
 
-Dangerhil,10,DC,DCI,
-FlowGK,1,PO,,</MudText>
+                        Dangerhil,10,DC,DCI,
+                        FlowGK,1,PO,,
+                    </MudText>
                     <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Warning"
                                OnClick="DownloadTemplate">
-                        DOWNLOAD TEMPLATE
+                        Download Template
                     </MudButton>
                 </MudExpansionPanel>
             </MudExpansionPanels>
 
-            <InputFile id="csv-player-input" OnChange="OnFileSelected" accept=".csv" class="ttf-file-input" />
-            <label for="csv-player-input" class="ttf-file-label @(_fileName != null ? "ttf-file-label--loaded" : "")">
-                <MudButton Variant="Variant.Outlined" FullWidth="true"
-                           StartIcon="@Icons.Material.Filled.GroupAdd" Class="ttf-file-btn">
-                    @(_fileName ?? "SELECT CSV FILE")
+            <InputFile id="csv-player-input" OnChange="OnFileSelected" accept=".csv" Class="cpid__file-input" />
+            <label for="csv-player-input" class="cpid__file-label">
+                <MudButton Variant="Variant.Outlined" Color="Color.Default" FullWidth="true"
+                           StartIcon="@Icons.Material.Filled.GroupAdd" Class="cpid__file-btn">
+                    @(_fileName ?? "Select CSV file")
                 </MudButton>
             </label>
 
             @if (_rows.Any())
             {
                 <MudDivider />
-                <MudText Typo="Typo.caption" Class="ttf-rows-label">
-                    @_rows.Count ROWS PARSED — REVIEW BEFORE SAVING:
+                <MudText Typo="Typo.caption" Class="cpid__rows-label">
+                    @_rows.Count rows parsed — review before saving:
                 </MudText>
 
                 @foreach (var row in _rows)
@@ -80,7 +82,7 @@ FlowGK,1,PO,,</MudText>
                 <MudButton Variant="Variant.Filled" Color="Color.Warning" FullWidth="true"
                            Disabled="@(_saving || !_rows.Any(r => r.IsValid))"
                            OnClick="Save">
-                    @(_saving ? "SAVING..." : $"IMPORT {_rows.Count(r => r.IsValid)} PLAYERS")
+                    @(_saving ? "Saving..." : $"Import {_rows.Count(r => r.IsValid)} Players")
                 </MudButton>
             }
 
@@ -92,7 +94,7 @@ FlowGK,1,PO,,</MudText>
         </MudStack>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="@(() => MudDialog.Close(DialogResult.Ok(true)))" Variant="Variant.Text">CLOSE</MudButton>
+        <MudButton OnClick="@(() => MudDialog.Close(DialogResult.Ok(true)))" Variant="Variant.Text">Close</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -164,7 +166,9 @@ FlowGK,1,PO,,</MudText>
                     p.Code.Equals(primaryCode, StringComparison.OrdinalIgnoreCase));
 
                 if (primaryPos is null)
+                {
                     _parseErrors.Add($"Unknown position \"{primaryCode}\" for \"{alias}\"");
+                }
 
                 _rows.Add(new CsvRow
                 {
@@ -193,22 +197,63 @@ FlowGK,1,PO,,</MudText>
         var saved = 0;
         var skipped = 0;
 
+        var batchAliases = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var batchJerseys = new HashSet<int>();
+        var rng          = new Random();
+
         try
         {
             foreach (var row in _rows.Where(r => r.IsValid))
             {
-                if (await PlayerService.AliasExistsAsync(row.Alias))
+                // Intra-batch alias conflict
+                if (!batchAliases.Add(row.Alias))
                 {
-                    _parseErrors.Add($"Skipped \"{row.Alias}\" — alias already exists.");
+                    _parseErrors.Add($"Skipped \"{row.Alias}\" — duplicate alias in CSV.");
                     skipped++;
                     continue;
                 }
 
-                if (row.JerseyNumber.HasValue && await PlayerService.JerseyNumberExistsAsync(row.JerseyNumber.Value))
+                // Intra-batch jersey conflict
+                if (row.JerseyNumber.HasValue && !batchJerseys.Add(row.JerseyNumber.Value))
                 {
-                    _parseErrors.Add($"Skipped \"{row.Alias}\" — jersey #{row.JerseyNumber} already taken.");
+                    _parseErrors.Add($"Skipped \"{row.Alias}\" — jersey #{row.JerseyNumber} duplicate in CSV.");
                     skipped++;
                     continue;
+                }
+
+                // DB-level alias check
+                if (await PlayerService.AliasExistsAsync(row.Alias))
+                {
+                    _parseErrors.Add($"Skipped \"{row.Alias}\" — alias already exists in DB.");
+                    skipped++;
+                    continue;
+                }
+
+                // DB-level jersey check
+                if (row.JerseyNumber.HasValue && await PlayerService.JerseyNumberExistsAsync(row.JerseyNumber.Value))
+                {
+                    _parseErrors.Add($"Skipped \"{row.Alias}\" — jersey #{row.JerseyNumber} already taken in DB.");
+                    skipped++;
+                    continue;
+                }
+
+                // Auto-assign jersey number if missing
+                if (!row.JerseyNumber.HasValue)
+                {
+                    var candidates = Enumerable.Range(1, 99)
+                        .Where(n => !batchJerseys.Contains(n))
+                        .OrderBy(_ => rng.Next())
+                        .ToList();
+
+                    foreach (var n in candidates)
+                    {
+                        if (!await PlayerService.JerseyNumberExistsAsync(n))
+                        {
+                            row.JerseyNumber = n;
+                            batchJerseys.Add(n);
+                            break;
+                        }
+                    }
                 }
 
                 await PlayerService.CreateAsync(new Player
@@ -229,7 +274,7 @@ FlowGK,1,PO,,</MudText>
         }
         catch (Exception ex)
         {
-            _error = ex.Message;
+            _error = $"Import failed on a row — {ex.InnerException?.Message ?? ex.Message}";
         }
         finally
         {

@@ -1,4 +1,4 @@
-﻿@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Forms
 @inject IAiParserService AiParserService
 @inject IMatchService MatchService
 
@@ -17,18 +17,19 @@
                 <MudSelectItem T="string" Value="@("left")">Left column (BLUE — Away)</MudSelectItem>
             </MudSelect>
 
-            <InputFile id="facts-file-input" OnChange="OnFileSelected" accept="image/*" style="display:none;" />
-            <label for="facts-file-input" style="width:100%;">
-                <MudButton Variant="Variant.Outlined" Color="Color.Default" FullWidth="true"
-                           StartIcon="@Icons.Material.Filled.Image" Style="pointer-events:none;">
-                    @(_fileName ?? "Select Match Facts screenshot")
+            @* Fixed: removed Style="pointer-events:none;" from button — now uses shared ttf-file-btn class *@
+            <InputFile id="facts-file-input" OnChange="OnFileSelected" accept="image/*" class="ttf-file-input" />
+            <label for="facts-file-input" class="ttf-file-label @(_fileName != null ? "ttf-file-label--loaded" : "")">
+                <MudButton Variant="Variant.Outlined" FullWidth="true"
+                           StartIcon="@Icons.Material.Filled.Image" Class="ttf-file-btn">
+                    @(_fileName ?? "SELECT MATCH FACTS SCREENSHOT")
                 </MudButton>
             </label>
 
             <MudButton Variant="Variant.Filled" Color="Color.Warning" FullWidth="true"
                        Disabled="@(_imageBase64 is null || _matchId == 0 || _parsing)"
                        OnClick="Parse">
-                @(_parsing ? "Analysing..." : "Extract Match Facts with AI")
+                @(_parsing ? "ANALYSING..." : "EXTRACT MATCH FACTS WITH AI")
             </MudButton>
 
             @if (_error is not null)
@@ -39,7 +40,7 @@
             @if (_facts is not null)
             {
                 <MudDivider />
-                <MudText Typo="Typo.caption" Class="aud__rows-label">REVIEW EXTRACTED FACTS</MudText>
+                <MudText Typo="Typo.caption" Class="ttf-rows-label">REVIEW EXTRACTED FACTS</MudText>
                 <MudGrid Spacing="2">
                     <MudItem xs="6">
                         <MudNumericField T="byte?" @bind-Value="_facts.PossessionPct" Label="Possession %" Variant="Variant.Outlined" FullWidth="true" Min="0" Max="100" />
@@ -65,13 +66,13 @@
                 </MudGrid>
 
                 <MudButton Variant="Variant.Filled" Color="Color.Warning" FullWidth="true" OnClick="Confirm">
-                    Confirm & Save
+                    CONFIRM &amp; SAVE
                 </MudButton>
             }
         </MudStack>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="@(() => MudDialog.Close(DialogResult.Ok(true)))" Variant="Variant.Text">Close</MudButton>
+        <MudButton OnClick="@(() => MudDialog.Close(DialogResult.Ok(true)))" Variant="Variant.Text">CLOSE</MudButton>
     </DialogActions>
 </MudDialog>
 

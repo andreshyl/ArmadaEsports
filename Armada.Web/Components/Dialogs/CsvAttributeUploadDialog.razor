@@ -1,37 +1,35 @@
-﻿@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Forms
 
 <MudDialog>
     <DialogContent>
         <MudStack Spacing="3">
 
             <MudExpansionPanels Elevation="0">
-                <MudExpansionPanel Text="CSV Format" Class="caud__panel">
-                    <MudText Typo="Typo.caption" Class="caud__format-preview">
-                        alias,comunicacion,juego_en_equipo,posicionamiento,decisiones,reaccion,creatividad,consistencia,adaptabilidad,precision,compostura,notes
+                <MudExpansionPanel Text="CSV FORMAT" Class="caud__panel">
+                    <MudText Typo="Typo.caption" Class="ttf-format-preview">alias,comunicacion,juego_en_equipo,posicionamiento,decisiones,reaccion,creatividad,consistencia,adaptabilidad,precision,compostura,notes
 
-                        mrfijiwiji30,8,9,9,8,7,6,9,8,9,8,Snapshot J1
-                        Dangerhil,7,10,9,9,9,10,9,9,9,9,
-                    </MudText>
+mrfijiwiji30,8,9,9,8,7,6,9,8,9,8,Snapshot J1
+Dangerhil,7,10,9,9,9,10,9,9,9,9,</MudText>
                     <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Warning"
                                OnClick="DownloadTemplate">
-                        Download Template
+                        DOWNLOAD TEMPLATE
                     </MudButton>
                 </MudExpansionPanel>
             </MudExpansionPanels>
 
-            <InputFile id="csv-attr-input" OnChange="OnFileSelected" accept=".csv" Class="caud__file-input" />
-            <label for="csv-attr-input" Class="caud__file-label">
-                <MudButton Variant="Variant.Outlined" Color="Color.Default" FullWidth="true"
-                           StartIcon="@Icons.Material.Filled.TableChart" Class="caud__file-btn">
-                    @(_fileName ?? "Select CSV file")
+            <InputFile id="csv-attr-input" OnChange="OnFileSelected" accept=".csv" class="ttf-file-input" />
+            <label for="csv-attr-input" class="ttf-file-label @(_fileName != null ? "ttf-file-label--loaded" : "")">
+                <MudButton Variant="Variant.Outlined" FullWidth="true"
+                           StartIcon="@Icons.Material.Filled.TableChart" Class="ttf-file-btn">
+                    @(_fileName ?? "SELECT CSV FILE")
                 </MudButton>
             </label>
 
             @if (_rows.Any())
             {
                 <MudDivider />
-                <MudText Typo="Typo.caption" Class="caud__rows-label">
-                    @_rows.Count rows parsed — review before saving:
+                <MudText Typo="Typo.caption" Class="ttf-rows-label">
+                    @_rows.Count ROWS PARSED — REVIEW BEFORE SAVING:
                 </MudText>
 
                 @foreach (var row in _rows)
@@ -62,7 +60,7 @@
                 <MudButton Variant="Variant.Filled" Color="Color.Warning" FullWidth="true"
                            Disabled="@(_saving || !_rows.Any(r => r.PlayerId.HasValue))"
                            OnClick="Save">
-                    @(_saving ? "Saving..." : $"Import {_rows.Count(r => r.PlayerId.HasValue)} Snapshots")
+                    @(_saving ? "SAVING..." : $"IMPORT {_rows.Count(r => r.PlayerId.HasValue)} SNAPSHOTS")
                 </MudButton>
             }
 
@@ -74,7 +72,7 @@
         </MudStack>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="@(() => MudDialog.Close(DialogResult.Ok(true)))" Variant="Variant.Text">Close</MudButton>
+        <MudButton OnClick="@(() => MudDialog.Close(DialogResult.Ok(true)))" Variant="Variant.Text">CLOSE</MudButton>
     </DialogActions>
 </MudDialog>
 

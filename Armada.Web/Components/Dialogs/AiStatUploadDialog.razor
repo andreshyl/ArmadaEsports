@@ -12,11 +12,12 @@
                 }
             </MudSelect>
 
-            <InputFile id="ttf-file-input" OnChange="OnFilesSelected" accept="image/*" multiple style="display:none;" />
-            <label for="ttf-file-input" style="width:100%;">
-                <MudButton Variant="Variant.Outlined" Color="Color.Default" FullWidth="true"
-                           StartIcon="@Icons.Material.Filled.Image" Style="pointer-events:none;">
-                    @(_images.Count == 0 ? "Select screenshot(s)" : $"{_images.Count} image(s) selected")
+            @* Fixed: removed inline style="display:none;" and Style="pointer-events:none;" — now uses shared classes *@
+            <InputFile id="ttf-ai-file-input" OnChange="OnFilesSelected" accept="image/*" multiple class="ttf-file-input" />
+            <label for="ttf-ai-file-input" class="ttf-file-label @(_images.Count > 0 ? "ttf-file-label--loaded" : "")">
+                <MudButton Variant="Variant.Outlined" FullWidth="true"
+                           StartIcon="@Icons.Material.Filled.Image" Class="ttf-file-btn">
+                    @(_images.Count == 0 ? "SELECT SCREENSHOT(S)" : $"{_images.Count} IMAGE(S) SELECTED")
                 </MudButton>
             </label>
 
@@ -38,7 +39,7 @@
             <MudButton Variant="Variant.Filled" Color="Color.Warning" FullWidth="true"
                        Disabled="@(_images.Count == 0 || _matchId == 0 || _parsing)"
                        OnClick="Parse">
-                @(_parsing ? $"Analysing {_currentIndex}/{_images.Count}..." : "Extract Stats with AI")
+                @(_parsing ? $"ANALYSING {_currentIndex}/{_images.Count}..." : "EXTRACT STATS WITH AI")
             </MudButton>
 
             @if (_error is not null)
@@ -57,8 +58,8 @@
             @if (_allRows.Any())
             {
                 <MudDivider />
-                <MudText Typo="Typo.caption" Class="aud__rows-label">
-                    @_allRows.Count rows extracted — review before confirming:
+                <MudText Typo="Typo.caption" Class="ttf-rows-label">
+                    @_allRows.Count ROWS EXTRACTED — REVIEW BEFORE CONFIRMING:
                 </MudText>
                 @foreach (var row in _allRows)
                 {
@@ -78,13 +79,13 @@
                 }
                 <MudButton Variant="Variant.Filled" Color="Color.Warning" FullWidth="true"
                            OnClick="@(async () => await Confirm())">
-                    Confirm & Save
+                    CONFIRM &amp; SAVE
                 </MudButton>
             }
         </MudStack>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="@(() => MudDialog.Close(DialogResult.Ok(true)))" Variant="Variant.Text">Close</MudButton>
+        <MudButton OnClick="@(() => MudDialog.Close(DialogResult.Ok(true)))" Variant="Variant.Text">CLOSE</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -143,7 +144,6 @@
             }
         }
 
-        // Deduplicate rows by RawAlias — keep highest confidence per alias
         _allRows = _allRows
             .GroupBy(r => r.RawAlias?.ToLower())
             .Select(g => g.OrderByDescending(r => r.AiConfidenceScore).First())

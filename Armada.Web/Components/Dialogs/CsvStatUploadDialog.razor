@@ -1,4 +1,4 @@
-﻿@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Forms
 @inject IMatchService MatchService
 @inject IPlayerService PlayerService
 
@@ -13,35 +13,34 @@
                 }
             </MudSelect>
 
-            <!-- CSV Format Reference -->
             <MudExpansionPanels Elevation="0">
-                <MudExpansionPanel Text="CSV Format" Class="mdd__meta">
-                    <MudText Typo="Typo.caption" Style="font-family:monospace;white-space:pre-wrap;font-size:0.65rem;">
-                        alias,goals,assists,pass_accuracy_pct,shot_accuracy_pct,tackles,tackles_won,interceptions,saves,match_rating
+                @* Fixed: was using mdd__meta (wrong component class) *@
+                <MudExpansionPanel Text="CSV FORMAT">
+                    <MudText Typo="Typo.caption" Class="ttf-format-preview">alias,goals,assists,pass_accuracy_pct,shot_accuracy_pct,tackles,tackles_won,interceptions,saves,match_rating
 
-                        mrfijiwiji30,1,0,81,40,6,1,2,0,6.4
-                        Dangerhill,0,1,76,0,3,1,1,0,6.8
-                    </MudText>
+mrfijiwiji30,1,0,81,40,6,1,2,0,6.4
+Dangerhill,0,1,76,0,3,1,1,0,6.8</MudText>
                     <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Warning"
                                OnClick="DownloadTemplate">
-                        Download Template
+                        DOWNLOAD TEMPLATE
                     </MudButton>
                 </MudExpansionPanel>
             </MudExpansionPanels>
 
-            <InputFile id="csv-file-input" OnChange="OnFileSelected" accept=".csv" style="display:none;" />
-            <label for="csv-file-input" style="width:100%;">
-                <MudButton Variant="Variant.Outlined" Color="Color.Default" FullWidth="true"
-                           StartIcon="@Icons.Material.Filled.TableChart" Style="pointer-events:none;">
-                    @(_fileName ?? "Select CSV file")
+            @* Fixed: removed Style="pointer-events:none;" from button, moved to ttf-file-btn class *@
+            <InputFile id="csv-file-input" OnChange="OnFileSelected" accept=".csv" class="ttf-file-input" />
+            <label for="csv-file-input" class="ttf-file-label @(_fileName != null ? "ttf-file-label--loaded" : "")">
+                <MudButton Variant="Variant.Outlined" FullWidth="true"
+                           StartIcon="@Icons.Material.Filled.TableChart" Class="ttf-file-btn">
+                    @(_fileName ?? "SELECT CSV FILE")
                 </MudButton>
             </label>
 
             @if (_rows.Any())
             {
                 <MudDivider />
-                <MudText Typo="Typo.caption" Class="aud__rows-label">
-                    @_rows.Count rows parsed — match players before saving:
+                <MudText Typo="Typo.caption" Class="ttf-rows-label">
+                    @_rows.Count ROWS PARSED — MATCH PLAYERS BEFORE SAVING:
                 </MudText>
 
                 @foreach (var row in _rows)
@@ -72,7 +71,7 @@
                 <MudButton Variant="Variant.Filled" Color="Color.Warning" FullWidth="true"
                            Disabled="@(_saving || _matchId == 0)"
                            OnClick="Save">
-                    @(_saving ? "Saving..." : $"Import {_rows.Count(r => r.PlayerId.HasValue)} Players")
+                    @(_saving ? "SAVING..." : $"IMPORT {_rows.Count(r => r.PlayerId.HasValue)} PLAYERS")
                 </MudButton>
             }
 
@@ -83,7 +82,7 @@
         </MudStack>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="@(() => MudDialog.Close(DialogResult.Ok(true)))" Variant="Variant.Text">Close</MudButton>
+        <MudButton OnClick="@(() => MudDialog.Close(DialogResult.Ok(true)))" Variant="Variant.Text">CLOSE</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -132,7 +131,6 @@
         var content = await reader.ReadToEndAsync();
         var lines = content.Split('\n', StringSplitOptions.RemoveEmptyEntries);
 
-        // Skip header
         foreach (var line in lines.Skip(1))
         {
             var parts = line.Trim().Split(',');
@@ -155,7 +153,6 @@
                     MatchRating = parts.Length > 9 && !string.IsNullOrWhiteSpace(parts[9]) ? decimal.Parse(parts[9].Trim()) : null,
                 };
 
-                // Auto-match player by alias (case-insensitive)
                 row.PlayerId = _players
                     .FirstOrDefault(p => p.Alias.Equals(alias, StringComparison.OrdinalIgnoreCase))?.Id;
 

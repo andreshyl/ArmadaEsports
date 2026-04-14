@@ -1,0 +1,98 @@
+/* ============================================================
+   dialog-shared.css
+   Shared styles for ALL TTF dialogs.
+   Import this once globally (e.g. in app.css or _Layout.cshtml).
+   ============================================================ */
+
+/* ── File upload button — universal pattern ──────────────── */
+.ttf-file-label {
+    display: block;
+    width: 100%;
+    cursor: pointer;
+}
+
+.ttf-file-input {
+    display: none;
+}
+
+/* The inner MudButton must NOT block pointer-events on the label.
+   pointer-events:none is intentional on the button — the label
+   intercepts the click and forwards it to the hidden InputFile. */
+.ttf-file-btn {
+    pointer-events: none;
+    width: 100%;
+    font-family: var(--ttf-font-mono) !important;
+    font-size: 0.72rem !important;
+    letter-spacing: 0.05em !important;
+    text-transform: none !important;
+    border-color: rgba(201, 162, 39, 0.35) !important;
+    color: var(--ttf-gold) !important;
+    transition: border-color 0.18s ease, color 0.18s ease, background 0.18s ease !important;
+}
+
+/* Hover travels through the label to give visual feedback */
+.ttf-file-label:hover .ttf-file-btn {
+    border-color: var(--ttf-gold) !important;
+    color: var(--ttf-off-white) !important;
+    background: rgba(201, 162, 39, 0.08) !important;
+}
+
+.ttf-file-label:active .ttf-file-btn {
+    background: rgba(201, 162, 39, 0.16) !important;
+    transform: scale(0.99);
+}
+
+/* File name loaded — gold accent */
+.ttf-file-label.ttf-file-label--loaded .ttf-file-btn {
+    border-color: var(--ttf-gold) !important;
+    color: var(--ttf-gold) !important;
+    background: rgba(201, 162, 39, 0.06) !important;
+}
+
+/* ── Expansion panel header — uniform across dialogs ─────── */
+.ttf-panel .mud-expand-panel-header {
+    font-family: var(--ttf-font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    color: var(--ttf-gold);
+    text-transform: uppercase;
+}
+
+/* ── Format preview text ─────────────────────────────────── */
+.ttf-format-preview {
+    display: block;
+    font-family: var(--ttf-font-mono);
+    font-size: 0.68rem;
+    color: var(--ttf-off-white);
+    opacity: 0.85;            /* was 0.6 — raised for readability */
+    line-height: 1.6;
+    padding: 0.5rem 0;
+    white-space: pre-wrap;
+    word-break: break-all;
+    overflow-wrap: break-word;
+}
+
+/* ── Parsed rows label ───────────────────────────────────── */
+.ttf-rows-label {
+    font-family: var(--ttf-font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.06em;
+    color: var(--ttf-gold);   /* was ttf-off-white @ opacity 0.5 — unreadable */
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+/* ── Dialog action buttons — consistent Close / Cancel ───── */
+.mud-dialog-actions .mud-button-root {
+    font-family: var(--ttf-font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition: color 0.15s ease, opacity 0.15s ease;
+}
+
+/* ── MudAlert inside dialogs ─────────────────────────────── */
+.mud-dialog .mud-alert {
+    font-family: var(--ttf-font-mono);
+    font-size: 0.7rem;
+}

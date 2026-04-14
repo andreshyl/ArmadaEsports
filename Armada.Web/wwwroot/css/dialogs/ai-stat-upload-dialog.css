@@ -1,7 +1,14 @@
+/* ============================================================
+   ai-stat-upload-dialog.css  |  Prefix: aud__
+   ============================================================ */
+
 .aud__rows-label {
+    font-family: var(--ttf-font-mono);
     color: var(--ttf-gold);
     font-weight: 600;
-    letter-spacing: 1px;
+    letter-spacing: 0.06em;
+    font-size: 0.68rem;
+    text-transform: uppercase;
 }
 
 .aud__row {
@@ -10,19 +17,24 @@
     gap: 8px;
     padding: 6px 0;
     border-bottom: 0.5px solid var(--ttf-border);
+    transition: border-color 0.15s ease;
 }
 
-    .aud__row:last-child {
-        border-bottom: none;
-    }
+.aud__row:last-child {
+    border-bottom: none;
+}
 
 .aud__row-select {
     flex: 1;
 }
 
+/* Solid text — was using ttf-grey which disappears on dark bg */
 .aud__row-alias {
-    color: var(--ttf-grey);
+    color: var(--ttf-off-white);
     min-width: 80px;
+    font-family: var(--ttf-font-mono);
+    font-size: 0.72rem;
+    opacity: 0.7;
 }
 
 .aud__conf-medium {

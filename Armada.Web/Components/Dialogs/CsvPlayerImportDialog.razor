@@ -1,37 +1,35 @@
-﻿@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Forms
 
 <MudDialog>
     <DialogContent>
         <MudStack Spacing="3">
 
             <MudExpansionPanels Elevation="0">
-                <MudExpansionPanel Text="CSV Format" Class="cpid__panel">
-                    <MudText Typo="Typo.caption" Class="cpid__format-preview">
-                        alias,jersey_number,primary_position,secondary_position,tertiary_position
+                <MudExpansionPanel Text="CSV FORMAT" Class="cpid__panel">
+                    <MudText Typo="Typo.caption" Class="ttf-format-preview">alias,jersey_number,primary_position,secondary_position,tertiary_position
 
-                        Dangerhil,10,DC,DCI,
-                        FlowGK,1,PO,,
-                    </MudText>
+Dangerhil,10,DC,DCI,
+FlowGK,1,PO,,</MudText>
                     <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Warning"
                                OnClick="DownloadTemplate">
-                        Download Template
+                        DOWNLOAD TEMPLATE
                     </MudButton>
                 </MudExpansionPanel>
             </MudExpansionPanels>
 
-            <InputFile id="csv-player-input" OnChange="OnFileSelected" accept=".csv" Class="cpid__file-input" />
-            <label for="csv-player-input" class="cpid__file-label">
-                <MudButton Variant="Variant.Outlined" Color="Color.Default" FullWidth="true"
-                           StartIcon="@Icons.Material.Filled.GroupAdd" Class="cpid__file-btn">
-                    @(_fileName ?? "Select CSV file")
+            <InputFile id="csv-player-input" OnChange="OnFileSelected" accept=".csv" class="ttf-file-input" />
+            <label for="csv-player-input" class="ttf-file-label @(_fileName != null ? "ttf-file-label--loaded" : "")">
+                <MudButton Variant="Variant.Outlined" FullWidth="true"
+                           StartIcon="@Icons.Material.Filled.GroupAdd" Class="ttf-file-btn">
+                    @(_fileName ?? "SELECT CSV FILE")
                 </MudButton>
             </label>
 
             @if (_rows.Any())
             {
                 <MudDivider />
-                <MudText Typo="Typo.caption" Class="cpid__rows-label">
-                    @_rows.Count rows parsed — review before saving:
+                <MudText Typo="Typo.caption" Class="ttf-rows-label">
+                    @_rows.Count ROWS PARSED — REVIEW BEFORE SAVING:
                 </MudText>
 
                 @foreach (var row in _rows)
@@ -82,7 +80,7 @@
                 <MudButton Variant="Variant.Filled" Color="Color.Warning" FullWidth="true"
                            Disabled="@(_saving || !_rows.Any(r => r.IsValid))"
                            OnClick="Save">
-                    @(_saving ? "Saving..." : $"Import {_rows.Count(r => r.IsValid)} Players")
+                    @(_saving ? "SAVING..." : $"IMPORT {_rows.Count(r => r.IsValid)} PLAYERS")
                 </MudButton>
             }
 
@@ -94,7 +92,7 @@
         </MudStack>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="@(() => MudDialog.Close(DialogResult.Ok(true)))" Variant="Variant.Text">Close</MudButton>
+        <MudButton OnClick="@(() => MudDialog.Close(DialogResult.Ok(true)))" Variant="Variant.Text">CLOSE</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -166,9 +164,7 @@
                     p.Code.Equals(primaryCode, StringComparison.OrdinalIgnoreCase));
 
                 if (primaryPos is null)
-                {
                     _parseErrors.Add($"Unknown position \"{primaryCode}\" for \"{alias}\"");
-                }
 
                 _rows.Add(new CsvRow
                 {

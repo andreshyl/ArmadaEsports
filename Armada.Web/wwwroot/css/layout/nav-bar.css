@@ -1,3 +1,27 @@
+/* ============================================================
+   nav-bar.css — TTF Esports
+   ============================================================ */
+
+/* ── Wrapper visibility ── */
+.ttf-nav-desktop {
+    display: flex;
+}
+
+.ttf-nav-mobile {
+    display: none;
+}
+
+@media (max-width: 1279px) {
+    .ttf-nav-desktop {
+        display: none;
+    }
+
+    .ttf-nav-mobile {
+        display: flex;
+    }
+}
+
+/* ── AppBar shared ── */
 .ttf-nav {
     background: var(--ttf-black) !important;
     border-bottom: 2px solid var(--ttf-gold);
@@ -13,11 +37,11 @@
         position: relative;
     }
 
-/* Logo */
-.ttf-nav__logo-link {
-    text-decoration: none;
+/* ── Logo ── */
+.ttf-nav__logo-btn {
     flex-shrink: 0;
     z-index: 1;
+    text-transform: none !important;
 }
 
 .ttf-nav__logo {
@@ -27,22 +51,34 @@
     transition: transform 0.2s ease;
 }
 
-.ttf-nav__logo-link:hover .ttf-nav__logo {
-    transform: scale(1.05);
-}
-
+/* rem: tipografía — desktop fixed, mobile fluid con vw */
 .ttf-nav__brand {
     color: var(--ttf-gold) !important;
     font-weight: 700 !important;
     letter-spacing: 2px !important;
-    transition: opacity 0.2s ease;
+    font-size: 1.25rem;
+    white-space: nowrap;
 }
 
-.ttf-nav__logo-link:hover .ttf-nav__brand {
-    opacity: 0.85;
+@media (max-width: 1279px) {
+    .ttf-nav__brand {
+        /* vw: escala con viewport en mobile */
+        font-size: clamp(0.75rem, 3.5vw, 1.1rem) !important;
+        letter-spacing: 1px !important;
+    }
+
+    .ttf-nav__logo {
+        /* px base, vw para escalar fluido */
+        height: clamp(24px, 5vw, 36px);
+        width: clamp(24px, 5vw, 36px);
+    }
+
+    .ttf-nav .mud-toolbar {
+        padding: 0 1rem !important;
+    }
 }
 
-/* Centered links */
+/* ── Desktop centered links ── */
 .ttf-nav__links {
     position: absolute;
     left: 50%;
@@ -83,7 +119,8 @@
         background-color: rgba(201, 168, 76, 0.08) !important;
     }
 
-        .ttf-nav__link:hover::after {
+        .ttf-nav__link:hover::after,
+        .ttf-nav__link--active::after {
             transform: scaleX(1);
         }
 
@@ -92,11 +129,7 @@
     font-weight: 700 !important;
 }
 
-    .ttf-nav__link--active::after {
-        transform: scaleX(1);
-    }
-
-/* Right icon */
+/* ── Desktop auth icon ── */
 .ttf-nav__icon-btn {
     color: rgba(245, 242, 235, 0.6) !important;
     border-radius: 6px !important;
@@ -107,3 +140,107 @@
         color: var(--ttf-gold) !important;
         background-color: rgba(201, 168, 76, 0.1) !important;
     }
+
+/* ── Mobile top bar auth ── */
+.ttf-nav__mobile-auth {
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    gap: 0.5rem;
+}
+
+.ttf-nav__mobile-ghost {
+    border-radius: 6px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    color: rgba(245, 242, 235, 0.7) !important;
+    transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+    .ttf-nav__mobile-ghost:hover {
+        color: var(--ttf-gold) !important;
+        background-color: rgba(201, 168, 76, 0.1) !important;
+    }
+
+.ttf-nav__mobile-cta {
+    border-radius: 6px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    background-color: var(--ttf-gold) !important;
+    color: var(--ttf-black) !important;
+    transition: all 0.2s ease;
+}
+
+    .ttf-nav__mobile-cta:hover {
+        background-color: var(--ttf-off-white) !important;
+        color: var(--ttf-black) !important;
+    }
+
+/* ── Bottom nav ── */
+.ttf-bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background-color: var(--ttf-black) !important;
+    border-top: 1px solid rgba(201, 168, 76, 0.25);
+}
+
+.ttf-bottom-nav__bar {
+    height: 5rem;
+    padding: 0.5rem 0;
+    width: 100%;
+}
+
+.ttf-bn-item {
+    cursor: pointer;
+    padding: 0.25em 0.5em;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+    flex: 1;
+    max-width: 5rem;
+    min-height: 44px;
+}
+
+    .ttf-bn-item .mud-icon-root {
+        color: rgba(245, 242, 235, 0.6);
+        transition: color 0.2s ease;
+    }
+
+    .ttf-bn-item .mud-typography {
+        font-family: 'IBM Plex Mono', monospace !important;
+        font-size: 0.62rem;
+        font-weight: 500;
+        color: rgba(245, 242, 235, 0.6);
+        transition: color 0.2s ease;
+        margin-top: 0.15rem;
+    }
+
+.ttf-bn-item--active .mud-icon-root,
+.ttf-bn-item--active .mud-typography {
+    color: var(--ttf-gold) !important;
+    font-weight: 700;
+}
+
+.ttf-bn-item:hover .mud-icon-root,
+.ttf-bn-item:hover .mud-typography {
+    color: var(--ttf-gold);
+}
+
+@media (max-width: 480px) {
+    .ttf-bn-item {
+        max-width: 4rem;
+    }
+
+        .ttf-bn-item .mud-typography {
+            font-size: 0.58rem;
+        }
+}
+
+/* ── Content offset for bottom nav ── */
+@media (max-width: 1279px) {
+    .ttf-main-content {
+        padding-bottom: 5.5rem !important;
+    }
+}

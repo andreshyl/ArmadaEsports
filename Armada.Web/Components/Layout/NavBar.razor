@@ -1,45 +1,111 @@
+@* NavBar.razor — TTF Esports Primary Navigation *@
 @inject NavigationManager Nav
 @inject TtfAuthStateProvider AuthProvider
 @implements IDisposable
 
-<MudAppBar Class="ttf-nav" Elevation="2" Dense="false">
+@* ── Desktop ── *@
+<div class="ttf-nav-desktop">
+    <MudAppBar Class="ttf-nav" Elevation="2" Dense="false">
 
-    <MudButton Variant="Variant.Text" DisableElevation="true" OnClick="GoHome" Class="ttf-nav__logo-btn">
-        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-            <img class="ttf-nav__logo" src="@AssetExtensions.TeamLogo()" alt="TTF" />
-            <MudText Typo="Typo.h6" Class="ttf-nav__brand">TTF ESPORTS</MudText>
+        <MudButton Variant="Variant.Text" DisableElevation="true" OnClick="GoHome" Class="ttf-nav__logo-btn">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                <img class="ttf-nav__logo" src="@AssetExtensions.TeamLogo()" alt="TTF" />
+                <MudText Typo="Typo.h6" Class="ttf-nav__brand">TTF ESPORTS</MudText>
+            </MudStack>
+        </MudButton>
+
+        <div class="ttf-nav__links">
+            <MudButton Variant="Variant.Text" Class="@NavClass("/plantilla")" DisableElevation="true" OnClick="GoPlantilla">PLANTILLA</MudButton>
+            <MudButton Variant="Variant.Text" Class="@NavClass("/partidos")" DisableElevation="true" OnClick="GoPartidos">PARTIDOS</MudButton>
+            <MudButton Variant="Variant.Text" Class="@NavClass("/calendario")" DisableElevation="true" OnClick="GoCalendario">CALENDARIO</MudButton>
+            <MudButton Variant="Variant.Text" Class="@NavClass("/h2h")" DisableElevation="true" OnClick="GoH2H">H2H</MudButton>
+        </div>
+
+        <MudSpacer />
+
+        <AuthorizeView>
+            <Authorized>
+                <MudTooltip Text="Dashboard" Arrow="true" Placement="Placement.Bottom">
+                    <MudIconButton Icon="@Icons.Material.Filled.Dashboard"
+                                   OnClick="GoManager"
+                                   Class="ttf-nav__icon-btn"
+                                   Size="Size.Medium" />
+                </MudTooltip>
+            </Authorized>
+            <NotAuthorized>
+                <MudTooltip Text="Manager Login" Arrow="true" Placement="Placement.Bottom">
+                    <MudIconButton Icon="@Icons.Material.Filled.AdminPanelSettings"
+                                   OnClick="GoLogin"
+                                   Class="ttf-nav__icon-btn"
+                                   Size="Size.Medium" />
+                </MudTooltip>
+            </NotAuthorized>
+        </AuthorizeView>
+
+    </MudAppBar>
+</div>
+
+@* ── Mobile ── *@
+<div class="ttf-nav-mobile">
+    <MudAppBar Class="ttf-nav" Elevation="2" Dense="false">
+
+        <MudButton Variant="Variant.Text" DisableElevation="true" OnClick="GoHome" Class="ttf-nav__logo-btn">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                <img class="ttf-nav__logo" src="@AssetExtensions.TeamLogo()" alt="TTF" />
+                <MudText Typo="Typo.h6" Class="ttf-nav__brand">TTF ESPORTS</MudText>
+            </MudStack>
+        </MudButton>
+
+        <MudSpacer />
+
+        <div class="ttf-nav__mobile-auth">
+            <AuthorizeView>
+                <Authorized>
+                    <MudIconButton Class="ttf-nav__mobile-cta"
+                                   Icon="@Icons.Material.Filled.Dashboard"
+                                   OnClick="GoManager" />
+                </Authorized>
+                <NotAuthorized>
+                    <MudIconButton Class="ttf-nav__mobile-cta"
+                                   Icon="@Icons.Material.Filled.AdminPanelSettings"
+                                   OnClick="GoLogin" />
+                </NotAuthorized>
+            </AuthorizeView>
+        </div>
+
+    </MudAppBar>
+
+    <MudPaper Class="ttf-bottom-nav" Elevation="3" Square="true">
+        <MudStack Row="true" Justify="Justify.SpaceAround" AlignItems="AlignItems.Center" Class="ttf-bottom-nav__bar">
+
+            <MudStack Class="@BnClass("/")" AlignItems="AlignItems.Center" Spacing="0" @onclick="GoHome">
+                <MudIcon Icon="@Icons.Material.Sharp.Home" Size="Size.Medium" />
+                <MudText Typo="Typo.caption">Home</MudText>
+            </MudStack>
+
+            <MudStack Class="@BnClass("/plantilla")" AlignItems="AlignItems.Center" Spacing="0" @onclick="GoPlantilla">
+                <MudIcon Icon="@Icons.Material.Outlined.Group" Size="Size.Medium" />
+                <MudText Typo="Typo.caption">Plantilla</MudText>
+            </MudStack>
+
+            <MudStack Class="@BnClass("/partidos")" AlignItems="AlignItems.Center" Spacing="0" @onclick="GoPartidos">
+                <MudIcon Icon="@Icons.Material.Outlined.SportsSoccer" Size="Size.Medium" />
+                <MudText Typo="Typo.caption">Partidos</MudText>
+            </MudStack>
+
+            <MudStack Class="@BnClass("/calendario")" AlignItems="AlignItems.Center" Spacing="0" @onclick="GoCalendario">
+                <MudIcon Icon="@Icons.Material.Outlined.CalendarMonth" Size="Size.Medium" />
+                <MudText Typo="Typo.caption">Calendario</MudText>
+            </MudStack>
+
+            <MudStack Class="@BnClass("/h2h")" AlignItems="AlignItems.Center" Spacing="0" @onclick="GoH2H">
+                <MudIcon Icon="@Icons.Material.Outlined.CompareArrows" Size="Size.Medium" />
+                <MudText Typo="Typo.caption">H2H</MudText>
+            </MudStack>
+
         </MudStack>
-    </MudButton>
-
-    <div class="ttf-nav__links">
-        <MudButton Variant="Variant.Text" Class="@NavClass("/plantilla")" DisableElevation="true" OnClick="GoPlantilla">PLANTILLA</MudButton>
-        <MudButton Variant="Variant.Text" Class="@NavClass("/partidos")" DisableElevation="true" OnClick="GoPartidos">PARTIDOS</MudButton>
-        <MudButton Variant="Variant.Text" Class="@NavClass("/calendario")" DisableElevation="true" OnClick="GoCalendario">CALENDARIO</MudButton>
-        <MudButton Variant="Variant.Text" Class="@NavClass("/h2h")" DisableElevation="true" OnClick="GoH2H">H2H</MudButton>
-    </div>
-
-    <MudSpacer />
-
-    <AuthorizeView>
-        <Authorized>
-            <MudTooltip Text="Dashboard" Arrow="true" Placement="Placement.Bottom">
-                <MudIconButton Icon="@Icons.Material.Filled.Dashboard"
-                               OnClick="GoManager"
-                               Class="ttf-nav__icon-btn"
-                               Size="Size.Medium" />
-            </MudTooltip>
-        </Authorized>
-        <NotAuthorized>
-            <MudTooltip Text="Manager Login" Arrow="true" Placement="Placement.Bottom">
-                <MudIconButton Icon="@Icons.Material.Filled.AdminPanelSettings"
-                               OnClick="GoLogin"
-                               Class="ttf-nav__icon-btn"
-                               Size="Size.Medium" />
-            </MudTooltip>
-        </NotAuthorized>
-    </AuthorizeView>
-
-</MudAppBar>
+    </MudPaper>
+</div>
 
 @code {
     protected override void OnInitialized() =>
@@ -55,6 +121,14 @@
         Nav.Uri.Contains(href, StringComparison.OrdinalIgnoreCase)
             ? "ttf-nav__link ttf-nav__link--active"
             : "ttf-nav__link";
+
+    private string BnClass(string href)
+    {
+        bool active = href == "/"
+            ? Nav.Uri.TrimEnd('/').Equals(Nav.BaseUri.TrimEnd('/'), StringComparison.OrdinalIgnoreCase)
+            : Nav.Uri.Contains(href, StringComparison.OrdinalIgnoreCase);
+        return active ? "ttf-bn-item ttf-bn-item--active" : "ttf-bn-item";
+    }
 
     private void GoHome() => Nav.NavigateTo("/");
     private void GoPlantilla() => Nav.NavigateTo("/plantilla");

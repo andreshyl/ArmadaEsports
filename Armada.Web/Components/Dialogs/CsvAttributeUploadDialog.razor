@@ -1,0 +1,207 @@
+﻿@using Microsoft.AspNetCore.Components.Forms
+
+<MudDialog>
+    <DialogContent>
+        <MudStack Spacing="3">
+
+            <MudExpansionPanels Elevation="0">
+                <MudExpansionPanel Text="CSV Format" Class="caud__panel">
+                    <MudText Typo="Typo.caption" Class="caud__format-preview">
+                        alias,comunicacion,juego_en_equipo,posicionamiento,decisiones,reaccion,creatividad,consistencia,adaptabilidad,precision,compostura,notes
+
+                        mrfijiwiji30,8,9,9,8,7,6,9,8,9,8,Snapshot J1
+                        Dangerhil,7,10,9,9,9,10,9,9,9,9,
+                    </MudText>
+                    <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Warning"
+                               OnClick="DownloadTemplate">
+                        Download Template
+                    </MudButton>
+                </MudExpansionPanel>
+            </MudExpansionPanels>
+
+            <InputFile id="csv-attr-input" OnChange="OnFileSelected" accept=".csv" Class="caud__file-input" />
+            <label for="csv-attr-input" Class="caud__file-label">
+                <MudButton Variant="Variant.Outlined" Color="Color.Default" FullWidth="true"
+                           StartIcon="@Icons.Material.Filled.TableChart" Class="caud__file-btn">
+                    @(_fileName ?? "Select CSV file")
+                </MudButton>
+            </label>
+
+            @if (_rows.Any())
+            {
+                <MudDivider />
+                <MudText Typo="Typo.caption" Class="caud__rows-label">
+                    @_rows.Count rows parsed — review before saving:
+                </MudText>
+
+                @foreach (var row in _rows)
+                {
+                    <div class="caud__row">
+                        <MudSelect T="int?" @bind-Value="row.PlayerId" Label="Player"
+                                   Variant="Variant.Outlined" Dense="true" Class="caud__row-select">
+                            @foreach (var p in Players)
+                            {
+                                <MudSelectItem T="int?" Value="@((int?)p.Id)">@p.Alias</MudSelectItem>
+                            }
+                        </MudSelect>
+                        <MudText Typo="Typo.caption" Class="caud__row-alias">@row.RawAlias</MudText>
+                        <MudChip T="string" Size="Size.Small" Class="@(row.PlayerId.HasValue ? "ttf-chip--win" : "ttf-chip--loss")">
+                            @(row.PlayerId.HasValue ? "✓" : "?")
+                        </MudChip>
+                    </div>
+                }
+
+                @if (_parseErrors.Any())
+                {
+                    @foreach (var err in _parseErrors)
+                    {
+                        <MudAlert Severity="Severity.Warning" Dense="true">@err</MudAlert>
+                    }
+                }
+
+                <MudButton Variant="Variant.Filled" Color="Color.Warning" FullWidth="true"
+                           Disabled="@(_saving || !_rows.Any(r => r.PlayerId.HasValue))"
+                           OnClick="Save">
+                    @(_saving ? "Saving..." : $"Import {_rows.Count(r => r.PlayerId.HasValue)} Snapshots")
+                </MudButton>
+            }
+
+            @if (_error is not null)
+            {
+                <MudAlert Severity="Severity.Error" Dense="true">@_error</MudAlert>
+            }
+
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => MudDialog.Close(DialogResult.Ok(true)))" Variant="Variant.Text">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+    [Parameter] public List<Player> Players { get; set; } = [];
+
+    [Inject] private IAttributeService AttributeService { get; set; } = null!;
+    [Inject] private IJSRuntime JS { get; set; } = null!;
+
+    private string? _fileName;
+    private string? _error;
+    private bool _saving;
+    private List<CsvRow> _rows = [];
+    private List<string> _parseErrors = [];
+
+    private class CsvRow
+    {
+        public string RawAlias { get; set; } = string.Empty;
+        public int? PlayerId { get; set; }
+        public byte Comunicacion { get; set; }
+        public byte JuegoEnEquipo { get; set; }
+        public byte Posicionamiento { get; set; }
+        public byte Decisiones { get; set; }
+        public byte Reaccion { get; set; }
+        public byte Creatividad { get; set; }
+        public byte Consistencia { get; set; }
+        public byte Adaptabilidad { get; set; }
+        public byte Precision { get; set; }
+        public byte Compostura { get; set; }
+        public string? Notes { get; set; }
+    }
+
+    private async Task OnFileSelected(InputFileChangeEventArgs e)
+    {
+        _rows.Clear();
+        _parseErrors.Clear();
+        _error = null;
+
+        var file = e.File;
+        _fileName = file.Name;
+
+        using var reader = new System.IO.StreamReader(file.OpenReadStream(maxAllowedSize: 1 * 1024 * 1024));
+        var content = await reader.ReadToEndAsync();
+        var lines = content.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+
+        foreach (var line in lines.Skip(1))
+        {
+            var parts = line.Trim().Split(',');
+            if (parts.Length < 11) continue;
+
+            try
+            {
+                static byte Clamp(string s) => (byte)Math.Clamp(int.Parse(s.Trim()), 1, 10);
+
+                var alias = parts[0].Trim();
+                var row = new CsvRow
+                {
+                    RawAlias = alias,
+                    Comunicacion = Clamp(parts[1]),
+                    JuegoEnEquipo = Clamp(parts[2]),
+                    Posicionamiento = Clamp(parts[3]),
+                    Decisiones = Clamp(parts[4]),
+                    Reaccion = Clamp(parts[5]),
+                    Creatividad = Clamp(parts[6]),
+                    Consistencia = Clamp(parts[7]),
+                    Adaptabilidad = Clamp(parts[8]),
+                    Precision = Clamp(parts[9]),
+                    Compostura = Clamp(parts[10]),
+                    Notes = parts.Length > 11 ? parts[11].Trim() : null,
+                };
+
+                row.PlayerId = Players
+                    .FirstOrDefault(p => p.Alias.Equals(alias, StringComparison.OrdinalIgnoreCase))?.Id;
+
+                _rows.Add(row);
+            }
+            catch (Exception ex)
+            {
+                _parseErrors.Add($"Line error: \"{line.Trim()}\" — {ex.Message}");
+            }
+        }
+    }
+
+    private async Task Save()
+    {
+        _saving = true;
+        _error = null;
+        try
+        {
+            foreach (var row in _rows.Where(r => r.PlayerId.HasValue))
+            {
+                var player = Players.First(p => p.Id == row.PlayerId);
+                var scores = new byte[]
+                {
+                    row.Comunicacion, row.JuegoEnEquipo, row.Posicionamiento, row.Decisiones,
+                    row.Reaccion,     row.Creatividad,   row.Consistencia,    row.Adaptabilidad,
+                    row.Precision,    row.Compostura
+                };
+
+                await AttributeService.SaveSnapshotAsync(
+                    row.PlayerId!.Value,
+                    player.PrimaryPosition?.Code ?? "MCD",
+                    scores,
+                    string.IsNullOrWhiteSpace(row.Notes) ? null : row.Notes);
+            }
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private async Task DownloadTemplate()
+    {
+        const string csv =
+            "alias,comunicacion,juego_en_equipo,posicionamiento,decisiones,reaccion,creatividad,consistencia,adaptabilidad,precision,compostura,notes\n" +
+            "mrfijiwiji30,8,9,9,8,7,6,9,8,9,8,Snapshot J1\n" +
+            "Dangerhil,7,10,9,9,9,10,9,9,9,9,";
+
+        var base64 = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(csv));
+        await JS.InvokeVoidAsync("eval",
+            $"const a=document.createElement('a');a.href='data:text/csv;base64,{base64}';a.download='attribute_snapshot_template.csv';a.click()");
+    }
+}

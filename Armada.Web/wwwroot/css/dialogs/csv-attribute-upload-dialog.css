@@ -1,0 +1,57 @@
+.caud__panel ::deep .mud-expand-panel-header {
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+    color: var(--ttf-grey);
+}
+
+.caud__format-preview {
+    font-family: monospace;
+    white-space: pre-wrap;
+    font-size: 0.65rem;
+    color: var(--ttf-grey);
+    display: block;
+    margin-bottom: 8px;
+    line-height: 1.6;
+}
+
+.caud__file-input {
+    display: none;
+}
+
+.caud__file-label {
+    width: 100%;
+    display: block;
+}
+
+.caud__file-btn {
+    pointer-events: none;
+}
+
+.caud__rows-label {
+    color: var(--ttf-gold);
+    font-weight: 600;
+    letter-spacing: 1px;
+    font-size: 0.68rem;
+}
+
+.caud__row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+    border-bottom: 0.5px solid var(--ttf-border);
+}
+
+.caud__row:last-child {
+    border-bottom: none;
+}
+
+.caud__row-select {
+    flex: 1;
+}
+
+.caud__row-alias {
+    color: var(--ttf-grey);
+    min-width: 80px;
+    font-size: 0.72rem;
+}

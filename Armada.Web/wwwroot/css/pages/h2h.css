@@ -10,7 +10,7 @@
 /* ── Player name headers ──────────────────────── */
 .h2h__attr-names-row {
     display: grid;
-    grid-template-columns: 28px 1fr 120px 1fr 28px;
+    grid-template-columns: 28px 1fr clamp(72px, 20vw, 120px) 1fr 28px;
     align-items: center;
     padding: 4px 0 10px;
     border-bottom: 2px solid var(--ttf-gold);
@@ -40,7 +40,7 @@
 /* ── Attribute rows ───────────────────────────── */
 .h2h__attr-row {
     display: grid;
-    grid-template-columns: 28px 1fr 120px 1fr 28px;
+    grid-template-columns: 28px 1fr clamp(72px, 20vw, 120px) 1fr 28px;
     align-items: center;
     gap: 8px;
     padding: 5px 0;

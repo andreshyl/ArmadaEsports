@@ -69,3 +69,45 @@
 }
 
 .manager__login-success { color: var(--ttf-green); display: block; margin-bottom: 8px; }
+
+
+/* ── RESPONSIVE ─────────────────────────────── */
+@media (max-width: 1279px) {
+
+    /* Plantilla & Matches header: stack label above buttons */
+    .manager__section-card > .mud-stack[row] {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    /* Button groups wrap */
+    .manager__section-card .mud-stack[row].mud-stack {
+        flex-wrap: wrap;
+    }
+
+    /* Header row: allow label + button group to stack */
+    .manager__section-card .mud-stack {
+        flex-wrap: wrap;
+    }
+
+        /* Each button group wraps individually */
+        .manager__section-card .mud-stack .mud-stack {
+            flex-wrap: wrap;
+            justify-content: flex-start;
+        }
+
+    /* Matches table: hide Competition + Venue columns */
+    .manager__section-card .mud-table th:nth-child(3),
+    .manager__section-card .mud-table td:nth-child(3),
+    .manager__section-card .mud-table th:nth-child(4),
+    .manager__section-card .mud-table td:nth-child(4) {
+        display: none;
+    }
+
+    /* Wrap table in horizontal scroll container */
+    .manager__section-card .mud-table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+}

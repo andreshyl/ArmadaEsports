@@ -13,9 +13,11 @@
     }
     else
     {
+
+
         <MudGrid Spacing="4">
 
-            <!-- LEFT: Squad list -->
+
             <MudItem xs="12" md="4">
                 @foreach (var group in _groups)
                 {
@@ -48,7 +50,7 @@
                 }
             </MudItem>
 
-            <!-- RIGHT: 4-4-2 Formation -->
+            <!-- LEFT: 4-4-2 Formation -->
             <MudItem xs="12" md="8">
                 <div class="formation__header">
                     <MudText Class="formation__title">ALINEACIÓN — 4-4-2</MudText>
@@ -86,6 +88,9 @@
                     @FormationSlot("PO", 50f, 87f)
                 </div>
             </MudItem>
+
+            <!-- RIGHT: Squad list -->
+
 
         </MudGrid>
     }
@@ -171,7 +176,6 @@
     {
         _formation.TryGetValue(posCode, out var player);
         _ratings.TryGetValue(player?.Id ?? 0, out var rating);
-        // null-safe: show "?" for players without a jersey number
         var jerseyDisplay = player is not null
             ? (player.JerseyNumber?.ToString() ?? "?")
             : "?";

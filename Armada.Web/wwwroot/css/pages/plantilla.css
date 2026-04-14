@@ -183,3 +183,14 @@
     text-transform: uppercase;
     margin-top: 1px;
 }
+
+
+@media (max-width: 1279px) {
+    .plantilla__formation-item {
+        order: 2;
+    }
+
+    .plantilla__list-item {
+        order: 1;
+    }
+}

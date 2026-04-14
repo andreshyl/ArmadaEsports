@@ -6,7 +6,7 @@
     <DialogContent>
         <MudStack Spacing="3">
             <MudTextField @bind-Value="_alias" Label="Alias" Variant="Variant.Outlined" FullWidth="true" Required="true" />
-            <MudNumericField T="int" @bind-Value="_jerseyNumber" Label="Jersey Number" Variant="Variant.Outlined" FullWidth="true" Min="1" Max="99" />
+            <MudNumericField T="int?" @bind-Value="_jerseyNumber" Label="Jersey Number (optional)" Variant="Variant.Outlined" FullWidth="true" Min="1" Max="99" />
             <MudSelect T="int" @bind-Value="_primaryPositionId" Label="Primary Position" Variant="Variant.Outlined" FullWidth="true">
                 @foreach (var p in _positions)
                 {
@@ -43,7 +43,7 @@
 
     private List<ModelPosition> _positions = [];
     private string _alias = string.Empty;
-    private int _jerseyNumber;
+    private int? _jerseyNumber;
     private int _primaryPositionId;
     private int? _secondaryPositionId;
     private int? _tertiaryPositionId;
@@ -59,7 +59,11 @@
         if (string.IsNullOrWhiteSpace(_alias)) { _error = "Alias is required."; return; }
         if (_primaryPositionId == 0) { _error = "Primary position is required."; return; }
         if (await PlayerService.AliasExistsAsync(_alias)) { _error = "Alias already taken."; return; }
-        if (await PlayerService.JerseyNumberExistsAsync(_jerseyNumber)) { _error = "Jersey number already taken."; return; }
+        if (_jerseyNumber.HasValue && await PlayerService.JerseyNumberExistsAsync(_jerseyNumber.Value))
+        {
+            _error = "Jersey number already taken.";
+            return;
+        }
 
         _saving = true;
         await PlayerService.CreateAsync(new Player

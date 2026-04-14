@@ -3,10 +3,16 @@
 <MudDialog>
     <TitleContent>
         <div class="psd__header">
-            <div class="psd__avatar">@Player.JerseyNumber</div>
+            <div class="psd__avatar">@(Player.JerseyNumber?.ToString() ?? "—")</div>
             <div>
                 <div class="psd__name">@Player.Alias</div>
-                <div class="psd__meta">@Player.PrimaryPosition?.NameEs &nbsp;·&nbsp; #@Player.JerseyNumber</div>
+                <div class="psd__meta">
+                    @Player.PrimaryPosition?.NameEs
+                    @if (Player.JerseyNumber.HasValue)
+                    {
+                        <span>&nbsp;·&nbsp; #@Player.JerseyNumber</span>
+                    }
+                </div>
             </div>
         </div>
     </TitleContent>
@@ -41,56 +47,53 @@
                 }
             </MudTabPanel>
 
-            <MudTabPanel Text="MENTAL">
+            <MudTabPanel Text="ATRIBUTOS">
                 @if (!_snapshots.Any())
                 {
                     <div class="psd__empty">No attribute snapshots recorded.</div>
                 }
                 else
                 {
-                    <span class="psd__section-label">PROMEDIO — @_snapshots.Count snapshot(s)</span>
-                    <MudGrid Spacing="3" Class="mb-4">
+                    <div class="psd__attr-section">
+                        <div class="psd__overall-row">
+                            <span class="psd__overall-label">OVERALL</span>
+                            <span class="psd__chip-gold psd__overall-value">@_avgOverall.ToString("F1")</span>
+                        </div>
+
                         @for (int i = 0; i < _attrNames.Length; i++)
                         {
                             var idx = i;
-                            <MudItem xs="12" sm="6">
-                                <div class="psd__attr-row">
-                                    <span class="psd__attr-name">@_attrNames[idx]</span>
-                                    <MudProgressLinear Value="@((double)(_avgScores[idx] * 10))"
-                                                       Color="Color.Warning" Rounded="true" Size="Size.Small" Class="psd__attr-bar" />
-                                    <span class="psd__attr-score">@_avgScores[idx].ToString("F1")</span>
-                                </div>
-                            </MudItem>
+                            var score = _avgScores.Length > idx ? _avgScores[idx] : 0;
+                            <div class="psd__attr-row">
+                                <span class="psd__attr-label">@_attrNames[idx]</span>
+                                <MudProgressLinear Value="@((double)(score * 10))"
+                                                   Color="Color.Warning" Rounded="true"
+                                                   Size="Size.Small" Class="psd__attr-bar" />
+                                <span class="psd__attr-val">@score.ToString("F1")</span>
+                            </div>
                         }
-                    </MudGrid>
-
-                    <div class="psd__overall-row">
-                        <span class="psd__section-label">OVERALL</span>
-                        <span class="psd__chip-gold psd__chip-lg">@_avgOverall.ToString("F1")</span>
                     </div>
 
                     <MudDivider Class="my-3" />
-                    <span class="psd__section-label">SNAPSHOTS</span>
+                    <MudText Typo="Typo.caption" Class="psd__snapshots-label">SNAPSHOTS</MudText>
 
                     @foreach (var snap in _snapshots)
                     {
                         <div class="psd__snapshot-row">
-                            <div>
-                                <div class="psd__match-label">@snap.SnapshotDate.ToString("dd MMM yyyy")</div>
-                                @if (!string.IsNullOrEmpty(snap.Notes))
+                            <MudText Typo="Typo.caption" Class="psd__snapshot-date">
+                                @snap.SnapshotDate.ToString("dd MMM yyyy")
+                                @if (!string.IsNullOrWhiteSpace(snap.Notes))
                                 {
-                                    <div class="psd__match-date">@snap.Notes</div>
+                                    <span class="psd__snapshot-note"> — @snap.Notes</span>
                                 }
-                            </div>
-                            <div class="psd__snapshot-actions">
-                                <span class="psd__chip-gold">@snap.OverallRating.ToString("F1")</span>
-                                <AuthorizeView>
-                                    <Authorized>
-                                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small"
-                                                       Color="Color.Error" OnClick="@(() => DeleteSnapshot(snap.Id))" />
-                                    </Authorized>
-                                </AuthorizeView>
-                            </div>
+                            </MudText>
+                            <span class="psd__chip-gold">@snap.OverallRating.ToString("F1")</span>
+                            <AuthorizeView>
+                                <Authorized>
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small"
+                                                   Color="Color.Error" OnClick="@(() => DeleteSnapshot(snap.Id))" />
+                                </Authorized>
+                            </AuthorizeView>
                         </div>
                     }
                 }
@@ -120,6 +123,7 @@
                     </MudStack>
                 }
             </MudTabPanel>
+
         </MudTabs>
     </DialogContent>
     <DialogActions>

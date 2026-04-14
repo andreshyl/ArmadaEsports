@@ -5,7 +5,7 @@ namespace ArmadaEsports.Core.Models;
 public class Player : BaseAuditableEntity
 {
     public string Alias { get; set; } = string.Empty;
-    public int JerseyNumber { get; set; }
+    public int? JerseyNumber { get; set; }
     public int PrimaryPositionId { get; set; }
     public int? SecondaryPositionId { get; set; }
     public int? TertiaryPositionId { get; set; }

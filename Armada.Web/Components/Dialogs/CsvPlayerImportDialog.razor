@@ -1,0 +1,255 @@
+﻿@using Microsoft.AspNetCore.Components.Forms
+
+<MudDialog>
+    <DialogContent>
+        <MudStack Spacing="3">
+
+            <MudExpansionPanels Elevation="0">
+                <MudExpansionPanel Text="CSV Format" Class="cpid__panel">
+                    <MudText Typo="Typo.caption" Class="cpid__format-preview">
+                        alias,jersey_number,primary_position,secondary_position,tertiary_position
+
+                        Dangerhil,10,DC,DCI,
+                        FlowGK,1,PO,,
+                    </MudText>
+                    <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Warning"
+                               OnClick="DownloadTemplate">
+                        Download Template
+                    </MudButton>
+                </MudExpansionPanel>
+            </MudExpansionPanels>
+
+            <InputFile id="csv-player-input" OnChange="OnFileSelected" accept=".csv" Class="cpid__file-input" />
+            <label for="csv-player-input" class="cpid__file-label">
+                <MudButton Variant="Variant.Outlined" Color="Color.Default" FullWidth="true"
+                           StartIcon="@Icons.Material.Filled.GroupAdd" Class="cpid__file-btn">
+                    @(_fileName ?? "Select CSV file")
+                </MudButton>
+            </label>
+
+            @if (_rows.Any())
+            {
+                <MudDivider />
+                <MudText Typo="Typo.caption" Class="cpid__rows-label">
+                    @_rows.Count rows parsed — review before saving:
+                </MudText>
+
+                @foreach (var row in _rows)
+                {
+                    <div class="cpid__row">
+                        <div class="cpid__row-info">
+                            <MudText Typo="Typo.body2" Class="cpid__row-alias">@row.Alias</MudText>
+                            <MudText Typo="Typo.caption" Class="cpid__row-jersey">#@row.JerseyNumber</MudText>
+                        </div>
+                        <div class="cpid__row-positions">
+                            <MudSelect T="int" @bind-Value="row.PrimaryPositionId" Label="Primary"
+                                       Variant="Variant.Outlined" Dense="true" Class="cpid__pos-select">
+                                @foreach (var p in _positions)
+                                {
+                                    <MudSelectItem T="int" Value="@p.Id">@p.Code</MudSelectItem>
+                                }
+                            </MudSelect>
+                            <MudSelect T="int?" @bind-Value="row.SecondaryPositionId" Label="2nd"
+                                       Variant="Variant.Outlined" Dense="true" Class="cpid__pos-select" Clearable="true">
+                                @foreach (var p in _positions)
+                                {
+                                    <MudSelectItem T="int?" Value="@((int?)p.Id)">@p.Code</MudSelectItem>
+                                }
+                            </MudSelect>
+                            <MudSelect T="int?" @bind-Value="row.TertiaryPositionId" Label="3rd"
+                                       Variant="Variant.Outlined" Dense="true" Class="cpid__pos-select" Clearable="true">
+                                @foreach (var p in _positions)
+                                {
+                                    <MudSelectItem T="int?" Value="@((int?)p.Id)">@p.Code</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </div>
+                        <MudChip T="string" Size="Size.Small"
+                                 Class="@(row.IsValid ? "ttf-chip--win" : "ttf-chip--loss")">
+                            @(row.IsValid ? "✓" : "!")
+                        </MudChip>
+                    </div>
+                }
+
+                @if (_parseErrors.Any())
+                {
+                    @foreach (var err in _parseErrors)
+                    {
+                        <MudAlert Severity="Severity.Warning" Dense="true">@err</MudAlert>
+                    }
+                }
+
+                <MudButton Variant="Variant.Filled" Color="Color.Warning" FullWidth="true"
+                           Disabled="@(_saving || !_rows.Any(r => r.IsValid))"
+                           OnClick="Save">
+                    @(_saving ? "Saving..." : $"Import {_rows.Count(r => r.IsValid)} Players")
+                </MudButton>
+            }
+
+            @if (_error is not null)
+            {
+                <MudAlert Severity="Severity.Error" Dense="true">@_error</MudAlert>
+            }
+
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => MudDialog.Close(DialogResult.Ok(true)))" Variant="Variant.Text">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Inject] private IPlayerService PlayerService { get; set; } = null!;
+    [Inject] private IJSRuntime JS { get; set; } = null!;
+
+    private string? _fileName;
+    private string? _error;
+    private bool _saving;
+    private List<CsvRow> _rows = [];
+    private List<string> _parseErrors = [];
+    private List<Position> _positions = [];
+
+    private class CsvRow
+    {
+        public string Alias { get; set; } = string.Empty;
+        public int? JerseyNumber { get; set; }
+        public int PrimaryPositionId { get; set; }
+        public int? SecondaryPositionId { get; set; }
+        public int? TertiaryPositionId { get; set; }
+        public bool IsValid => !string.IsNullOrWhiteSpace(Alias) && PrimaryPositionId > 0;
+    }
+
+    protected override async Task OnInitializedAsync() =>
+        _positions = await PlayerService.GetAllPositionsAsync();
+
+    private async Task OnFileSelected(InputFileChangeEventArgs e)
+    {
+        _rows.Clear();
+        _parseErrors.Clear();
+        _error = null;
+
+        var file = e.File;
+        _fileName = file.Name;
+
+        using var reader = new System.IO.StreamReader(file.OpenReadStream(maxAllowedSize: 1 * 1024 * 1024));
+        var content = await reader.ReadToEndAsync();
+        var lines = content.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+
+        foreach (var line in lines.Skip(1))
+        {
+            var parts = line.Trim().Split(',');
+            if (parts.Length < 3) continue;
+
+            try
+            {
+                var alias = parts[0].Trim();
+                if (string.IsNullOrWhiteSpace(alias)) continue;
+
+                var jerseyRaw = parts[1].Trim();
+                int? jersey = string.IsNullOrWhiteSpace(jerseyRaw)
+                    ? null
+                    : int.TryParse(jerseyRaw, out var j) ? j : null;
+
+                if (!string.IsNullOrWhiteSpace(jerseyRaw) && jersey is null)
+                {
+                    _parseErrors.Add($"Invalid jersey number for \"{alias}\"");
+                    continue;
+                }
+
+                var primaryCode = parts[2].Trim();
+                var secondaryCode = parts.Length > 3 ? parts[3].Trim() : null;
+                var tertiaryCode = parts.Length > 4 ? parts[4].Trim() : null;
+
+                var primaryPos = _positions.FirstOrDefault(p =>
+                    p.Code.Equals(primaryCode, StringComparison.OrdinalIgnoreCase));
+
+                if (primaryPos is null)
+                {
+                    _parseErrors.Add($"Unknown position \"{primaryCode}\" for \"{alias}\"");
+                }
+
+                _rows.Add(new CsvRow
+                {
+                    Alias = alias,
+                    JerseyNumber = jersey,
+                    PrimaryPositionId = primaryPos?.Id ?? 0,
+                    SecondaryPositionId = string.IsNullOrWhiteSpace(secondaryCode) ? null :
+                        _positions.FirstOrDefault(p =>
+                            p.Code.Equals(secondaryCode, StringComparison.OrdinalIgnoreCase))?.Id,
+                    TertiaryPositionId = string.IsNullOrWhiteSpace(tertiaryCode) ? null :
+                        _positions.FirstOrDefault(p =>
+                            p.Code.Equals(tertiaryCode, StringComparison.OrdinalIgnoreCase))?.Id,
+                });
+            }
+            catch (Exception ex)
+            {
+                _parseErrors.Add($"Line error: \"{line.Trim()}\" — {ex.Message}");
+            }
+        }
+    }
+
+    private async Task Save()
+    {
+        _saving = true;
+        _error = null;
+        var saved = 0;
+        var skipped = 0;
+
+        try
+        {
+            foreach (var row in _rows.Where(r => r.IsValid))
+            {
+                if (await PlayerService.AliasExistsAsync(row.Alias))
+                {
+                    _parseErrors.Add($"Skipped \"{row.Alias}\" — alias already exists.");
+                    skipped++;
+                    continue;
+                }
+
+                if (row.JerseyNumber.HasValue && await PlayerService.JerseyNumberExistsAsync(row.JerseyNumber.Value))
+                {
+                    _parseErrors.Add($"Skipped \"{row.Alias}\" — jersey #{row.JerseyNumber} already taken.");
+                    skipped++;
+                    continue;
+                }
+
+                await PlayerService.CreateAsync(new Player
+                {
+                    Alias = row.Alias,
+                    JerseyNumber = row.JerseyNumber,
+                    PrimaryPositionId = row.PrimaryPositionId,
+                    SecondaryPositionId = row.SecondaryPositionId,
+                    TertiaryPositionId = row.TertiaryPositionId,
+                });
+                saved++;
+            }
+
+            if (skipped == 0)
+                MudDialog.Close(DialogResult.Ok(true));
+            else
+                _error = $"{saved} imported, {skipped} skipped. Review warnings above.";
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private async Task DownloadTemplate()
+    {
+        const string csv =
+            "alias,jersey_number,primary_position,secondary_position,tertiary_position\n" +
+            "Dangerhil,10,DC,DCI,\n" +
+            "FlowGK,1,PO,,";
+
+        var base64 = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(csv));
+        await JS.InvokeVoidAsync("eval",
+            $"const a=document.createElement('a');a.href='data:text/csv;base64,{base64}';a.download='player_import_template.csv';a.click()");
+    }
+}

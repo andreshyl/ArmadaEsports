@@ -22,7 +22,11 @@ public class PlayerService(ArmadaDbContext db) : IPlayerService
         if (!includeInactive)
             query = query.Where(p => p.IsActive);
 
-        return await query.OrderBy(p => p.JerseyNumber).ToListAsync();
+        return await query
+            .OrderBy(p => p.JerseyNumber == null)
+            .ThenBy(p => p.JerseyNumber)
+            .ThenBy(p => p.Alias)
+            .ToListAsync();
     }
 
     public async Task<List<Position>> GetAllPositionsAsync() =>
@@ -70,6 +74,7 @@ public class PlayerService(ArmadaDbContext db) : IPlayerService
     public async Task<bool> AliasExistsAsync(string alias, int? excludeId = null) =>
         await db.Players.AnyAsync(p => p.Alias == alias && p.Id != excludeId);
 
+    // null jersey is always allowed — only non-null values are checked for uniqueness
     public async Task<bool> JerseyNumberExistsAsync(int jerseyNumber, int? excludeId = null) =>
         await db.Players.AnyAsync(p => p.JerseyNumber == jerseyNumber && p.Id != excludeId);
 }

@@ -36,9 +36,17 @@
                     <MudText Typo="Typo.caption" Class="manager__section-title">PLANTILLA</MudText>
                     <MudStack Row="true" Spacing="1">
                         <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning"
-                                   OnClick="OpenCsvAttributeImport">CSV Attrs</MudButton>
+                                   OnClick="OpenCsvPlayerImport">
+                            CSV Players
+                        </MudButton>
                         <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning"
-                                   OnClick="OpenAddPlayer">+ Add Player</MudButton>
+                                   OnClick="OpenCsvAttributeImport">
+                            CSV Attrs
+                        </MudButton>
+                        <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning"
+                                   OnClick="OpenAddPlayer">
+                            + Add Player
+                        </MudButton>
                     </MudStack>
                 </MudStack>
                 <MudTable T="Player" Items="_players" Dense="true" Elevation="0">
@@ -52,8 +60,8 @@
                         <MudTd>
                             <MudStack Row="true" Spacing="1">
                                 <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="@(() => OpenEditPlayer(context))" />
-                                <MudIconButton Icon="@Icons.Material.Filled.Psychology" Size="Size.Small" OnClick="@(() => OpenAddSnapshot(context))" />
-                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => DeletePlayer(context))" />
+                                <MudIconButton Icon="@Icons.Material.Filled.BarChart" Size="Size.Small" OnClick="@(() => OpenAddSnapshot(context))" />
+                                <MudIconButton Icon="@Icons.Material.Filled.PersonOff" Size="Size.Small" Color="Color.Error" OnClick="@(() => DeletePlayer(context))" />
                             </MudStack>
                         </MudTd>
                     </RowTemplate>
@@ -66,22 +74,22 @@
             <div class="manager__section-card">
                 <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-3">
                     <MudText Typo="Typo.caption" Class="manager__section-title">COMPETITIONS</MudText>
-                    <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning" OnClick="OpenAddCompetition">+ Add</MudButton>
+                    <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning" OnClick="OpenAddCompetition">
+                        + Add Competition
+                    </MudButton>
                 </MudStack>
-                <MudStack Spacing="2">
-                    @foreach (var c in _competitions)
-                    {
-                        <div class="manager__comp-row">
-                            <MudText Typo="Typo.body2" Class="manager__comp-name">@c.Name</MudText>
-                            <MudChip T="string" Size="Size.Small">@c.CompetitionType</MudChip>
-                            <MudChip T="string" Size="Size.Small" Class="@(c.IsActive ? "ttf-chip--gold" : "")">
-                                @(c.IsActive ? "Active" : "Inactive")
-                            </MudChip>
-                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
-                                           OnClick="@(() => DeleteCompetition(c))" />
-                        </div>
-                    }
-                </MudStack>
+                <MudTable T="Competition" Items="_competitions" Dense="true" Elevation="0">
+                    <HeaderContent>
+                        <MudTh>Name</MudTh><MudTh>Type</MudTh><MudTh></MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd Class="manager__player-alias">@context.Name</MudTd>
+                        <MudTd>@context.CompetitionType</MudTd>
+                        <MudTd>
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => DeleteCompetition(context))" />
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
             </div>
         </MudItem>
 
@@ -90,13 +98,13 @@
             <div class="manager__section-card">
                 <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-3">
                     <MudText Typo="Typo.caption" Class="manager__section-title">MATCHES</MudText>
-                    <MudStack Row="true" Spacing="2">
-                        <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning" OnClick="OpenAddMatch">+ Add Match</MudButton>
-                        <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning" OnClick="OpenManualUpload">Manual Stats</MudButton>
-                        <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning" OnClick="OpenMatchFacts">Manual Match Facts</MudButton>
+                    <MudStack Row="true" Spacing="1">
                         <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning" OnClick="OpenAiMatchFacts">AI Match Facts</MudButton>
-                        <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning" OnClick="OpenAiUpload">AI Player Stats</MudButton>
+                        <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning" OnClick="OpenMatchFacts">Match Facts</MudButton>
+                        <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning" OnClick="OpenManualUpload">Manual Stats</MudButton>
+                        <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning" OnClick="OpenAiUpload">AI Stats</MudButton>
                         <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning" OnClick="OpenCsvImport">CSV Import</MudButton>
+                        <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning" OnClick="OpenAddMatch">+ Add Match</MudButton>
                     </MudStack>
                 </MudStack>
                 <MudTable T="Match" Items="_matches" Dense="true" Elevation="0">
@@ -184,15 +192,6 @@
             new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseButton = true });
     }
 
-    private async Task OpenCsvAttributeImport()
-    {
-        var parameters = new DialogParameters();
-        parameters.Add("Players", _players);
-        var dialog = await DialogService.ShowAsync<CsvAttributeUploadDialog>("CSV Attribute Import", parameters,
-            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseButton = true });
-        if (!(await dialog.Result)!.Canceled) await LoadDataAsync();
-    }
-
     private async Task DeletePlayer(Player p)
     {
         var result = await DialogService.ShowAsync<ConfirmDialog>("Delete Player",
@@ -205,7 +204,23 @@
         }
     }
 
-    // ── COMPETITIONS ──────────────────────────────────
+    private async Task OpenCsvAttributeImport()
+    {
+        var parameters = new DialogParameters();
+        parameters.Add("Players", _players);
+        var dialog = await DialogService.ShowAsync<CsvAttributeUploadDialog>("CSV Attribute Import", parameters,
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseButton = true });
+        if (!(await dialog.Result)!.Canceled) await LoadDataAsync();
+    }
+
+    private async Task OpenCsvPlayerImport()
+    {
+        var dialog = await DialogService.ShowAsync<CsvPlayerImportDialog>("CSV Player Import",
+            new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = true });
+        if (!(await dialog.Result)!.Canceled) await LoadDataAsync();
+    }
+
+    // ── COMPETITIONS ──────────────────────────────────────
     private async Task OpenAddCompetition()
     {
         var dialog = await DialogService.ShowAsync<AddCompetitionDialog>("Add Competition",

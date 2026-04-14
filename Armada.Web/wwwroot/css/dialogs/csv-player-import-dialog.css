@@ -1,0 +1,123 @@
+/* ============================================================
+   csv-player-import-dialog.css
+   Prefix: cpid__
+   ============================================================ */
+
+/* Expansion panel */
+.cpid__panel .mud-expand-panel-header {
+    font-family: var(--ttf-font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    color: var(--ttf-gold);
+    text-transform: uppercase;
+}
+
+.cpid__format-preview {
+    display: block;
+    font-family: var(--ttf-font-mono);
+    font-size: 0.68rem;
+    color: var(--ttf-off-white);
+    opacity: 0.6;
+    white-space: pre-wrap;
+    line-height: 1.6;
+    padding: 0.5rem 0;
+}
+
+/* File input hidden — label acts as button */
+.cpid__file-input {
+    display: none;
+}
+
+.cpid__file-label {
+    display: block;
+    cursor: pointer;
+}
+
+.cpid__file-btn {
+    font-family: var(--ttf-font-mono) !important;
+    font-size: 0.72rem !important;
+    letter-spacing: 0.05em !important;
+    border-color: rgba(245, 242, 235, 0.2) !important;
+    color: var(--ttf-off-white) !important;
+    text-transform: none !important;
+}
+
+.cpid__file-btn:hover {
+    border-color: var(--ttf-gold) !important;
+    color: var(--ttf-gold) !important;
+}
+
+/* Row count label */
+.cpid__rows-label {
+    font-family: var(--ttf-font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.06em;
+    color: var(--ttf-off-white);
+    opacity: 0.5;
+    text-transform: uppercase;
+}
+
+/* Individual player row */
+.cpid__row {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid rgba(245, 242, 235, 0.08);
+    border-radius: 4px;
+    background: rgba(245, 242, 235, 0.03);
+}
+
+.cpid__row-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    min-width: 0;
+}
+
+.cpid__row-alias {
+    font-family: var(--ttf-font-mono);
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--ttf-off-white);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.cpid__row-jersey {
+    font-family: var(--ttf-font-mono);
+    font-size: 0.65rem;
+    color: var(--ttf-gold);
+    opacity: 0.8;
+}
+
+/* Position selects — tight row */
+.cpid__row-positions {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+}
+
+.cpid__pos-select {
+    width: 80px;
+}
+
+.cpid__pos-select .mud-input-root {
+    font-family: var(--ttf-font-mono) !important;
+    font-size: 0.72rem !important;
+}
+
+.cpid__pos-select .mud-select-input {
+    font-size: 0.72rem !important;
+    padding: 4px 8px !important;
+}
+
+/* Status chip alignment */
+.cpid__row .mud-chip {
+    font-family: var(--ttf-font-mono);
+    font-size: 0.65rem;
+    min-width: 28px;
+    justify-content: center;
+}

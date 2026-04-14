@@ -28,7 +28,7 @@
                         {
                             <div class="plantilla__list-row" @onclick="() => OpenStats(p)">
                                 <MudAvatar Class="plantilla__avatar plantilla__avatar--sm">
-                                    @p.JerseyNumber.ToString()
+                                    @(p.JerseyNumber?.ToString() ?? "—")
                                 </MudAvatar>
                                 <div class="plantilla__list-info">
                                     <MudText Typo="Typo.body2" Class="plantilla__player-name">@p.Alias</MudText>
@@ -99,7 +99,6 @@
     private static readonly string[] _groups =
         ["Goalkeeper", "Defender", "Midfielder", "Forward"];
 
-    // Position label displayed under each slot
     private static readonly Dictionary<string, string> _posLabels = new()
     {
         ["PO"] = "GK",
@@ -134,38 +133,35 @@
         var codes = new[] { "PO", "LD", "LI", "DFD", "DFI", "MCD", "MVD", "MI", "MD", "DC", "DCI" };
         var assigned = new HashSet<int>();
 
-        // Pass 1: assign by primary position only
+        // Pass 1: primary position
         foreach (var code in codes)
         {
             var player = _players!
                 .Where(p => !assigned.Contains(p.Id) && p.PrimaryPosition?.Code == code)
                 .OrderByDescending(p => _ratings.TryGetValue(p.Id, out var r) ? r : 0)
                 .FirstOrDefault();
-
             _formation[code] = player;
             if (player is not null) assigned.Add(player.Id);
         }
 
-        // Pass 2: fill empty slots by secondary position
+        // Pass 2: secondary position
         foreach (var code in codes.Where(c => _formation[c] is null))
         {
             var player = _players!
                 .Where(p => !assigned.Contains(p.Id) && p.SecondaryPosition?.Code == code)
                 .OrderByDescending(p => _ratings.TryGetValue(p.Id, out var r) ? r : 0)
                 .FirstOrDefault();
-
             _formation[code] = player;
             if (player is not null) assigned.Add(player.Id);
         }
 
-        // Pass 3: fill remaining empty slots by tertiary position
+        // Pass 3: tertiary position
         foreach (var code in codes.Where(c => _formation[c] is null))
         {
             var player = _players!
                 .Where(p => !assigned.Contains(p.Id) && p.TertiaryPosition?.Code == code)
                 .OrderByDescending(p => _ratings.TryGetValue(p.Id, out var r) ? r : 0)
                 .FirstOrDefault();
-
             _formation[code] = player;
             if (player is not null) assigned.Add(player.Id);
         }
@@ -175,15 +171,19 @@
     {
         _formation.TryGetValue(posCode, out var player);
         _ratings.TryGetValue(player?.Id ?? 0, out var rating);
-        var jerseyNum = player is not null ? player.JerseyNumber.ToString() : "?";
+        // null-safe: show "?" for players without a jersey number
+        var jerseyDisplay = player is not null
+            ? (player.JerseyNumber?.ToString() ?? "?")
+            : "?";
         var alias = player?.Alias ?? "—";
         var posLabel = _posLabels.TryGetValue(posCode, out var lbl) ? lbl : posCode;
         var isEmpty = player is null;
 
-        <div class="formation__slot" style="left:@(xPct.ToString("F0"))%;top:@(yPct.ToString("F0"))%;"
+        <div class="formation__slot"
+             style="left:@(xPct.ToString("F0"))%;top:@(yPct.ToString("F0"))%;"
              @onclick="@(() => { if (player is not null) _ = OpenStats(player); })">
             <div class="formation__avatar @(isEmpty ? "formation__avatar--empty" : "")">
-                <span class="formation__initials">@jerseyNum</span>
+                <span class="formation__initials">@jerseyDisplay</span>
                 @if (!isEmpty && _ratings.ContainsKey(player!.Id))
                 {
                     <span class="formation__rating">@rating.ToString("F1")</span>

@@ -25,51 +25,48 @@
     {
         <div class="ma__body">
 
-            <!-- CALENDAR: headers separate from cells -->
             <div class="ma__calendar-col">
-                <!-- Day-of-week headers row -->
                 <div class="ma__cal-headers">
-                    @foreach (var label in new[] { "LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB", "DOM" })
-                    {
-                        var isTraining = label is "LUN" or "MAR" or "MIÉ" or "JUE";
-                        <div class="ma__cal-header @(isTraining ? "ma__cal-header--training" : "ma__cal-header--rest")">@label</div>
-                    }
+                    <div class="ma__cal-header ma__cal-header--training">LUN</div>
+                    <div class="ma__cal-header ma__cal-header--training">MAR</div>
+                    <div class="ma__cal-header ma__cal-header--training">MIÉ</div>
+                    <div class="ma__cal-header ma__cal-header--training">JUE</div>
+                    <div class="ma__cal-header ma__cal-header--rest">VIE</div>
+                    <div class="ma__cal-header ma__cal-header--rest">SÁB</div>
+                    <div class="ma__cal-header ma__cal-header--rest">DOM</div>
                 </div>
-                <!-- Day cells grid -->
-                <div class="ma__calendar">
-                    @foreach (var week in _calendarWeeks)
-                    {
-                        @foreach (var day in week)
-                        {
-                            @if (day is null)
-                            {
-                                <div class="ma__cal-cell ma__cal-cell--empty"></div>
-                            }
-                            else
-                            {
-                                var isTraining = IsTrainingDay(day.Value);
-                                var isFuture = day.Value > DateOnly.FromDateTime(DateTime.Today);
-                                var isSelected = _selectedDay == day;
-                                var pct = !isFuture && isTraining ? GetDayAttendancePct(day.Value) : (int?)null;
 
-                                <div class="ma__cal-cell
-                                    @(isTraining ? "ma__cal-cell--training" : "ma__cal-cell--rest")
-                                    @(isSelected ? "ma__cal-cell--active" : "")
-                                    @(isFuture ? "ma__cal-cell--future" : "")"
-                                     @onclick="() => { if (isTraining && !isFuture) SelectDay(day.Value); }">
-                                    <span class="ma__day-num">@day.Value.Day</span>
-                                    @if (pct.HasValue)
-                                    {
-                                        <span class="ma__day-pct @GetPctClass(pct.Value)">@pct%</span>
-                                    }
-                                </div>
-                            }
+                <div class="ma__calendar">
+                    @for (int ci = 0; ci < _calendarDays.Count; ci++)
+                    {
+                        var cell = _calendarDays[ci];
+
+                        @if (cell is null)
+                        {
+                            <div class="ma__cal-cell ma__cal-cell--empty"></div>
+                        }
+                        else
+                        {
+                            var day = cell.Value;
+                            var isTraining = IsTrainingDay(day);
+                            var isFuture = day > DateOnly.FromDateTime(DateTime.Today);
+                            var isSelected = _selectedDay == day;
+                            var pct = (!isFuture && isTraining) ? GetDayAttendancePct(day) : (int?)null;
+                            var cssClass = $"ma__cal-cell {(isTraining ? "ma__cal-cell--training" : "ma__cal-cell--rest")} {(isSelected ? "ma__cal-cell--active" : "")} {(isFuture ? "ma__cal-cell--future" : "")}";
+                            var capturedDay = day; // capture for lambda
+
+                            <div class="@cssClass" @onclick="() => OnDayClick(capturedDay, isTraining, isFuture)">
+                                <span class="ma__day-num">@day.Day</span>
+                                @if (pct.HasValue)
+                                {
+                                    <span class="ma__day-pct @GetPctClass(pct.Value)">@pct%</span>
+                                }
+                            </div>
                         }
                     }
                 </div>
             </div>
 
-            <!-- SESSION PANEL -->
             <div class="ma__session-col">
                 @if (_selectedDay.HasValue)
                 {
@@ -78,11 +75,13 @@
                         <button class="ma__save-btn" @onclick="SaveSession">GUARDAR</button>
                     </div>
                     <div class="ma__player-list">
-                        @foreach (var p in _players)
+                        @for (int pi = 0; pi < _players.Count; pi++)
                         {
+                            var p = _players[pi];
                             var present = _sessionChecks.GetValueOrDefault(p.Id, false);
+                            var pid = p.Id;
                             <div class="ma__player-row @(present ? "ma__player-row--present" : "")"
-                                 @onclick="() => TogglePlayer(p.Id)">
+                                 @onclick="() => TogglePlayer(pid)">
                                 <div class="ma__player-avatar">
                                     @(p.JerseyNumber?.ToString() ?? Initials(p.Alias))
                                 </div>
@@ -107,7 +106,6 @@
             </div>
         </div>
 
-        <!-- MONTHLY STATS -->
         <div class="ma__stats">
             <div class="ma__stats-header">RENDIMIENTO MENSUAL — @_currentDate.ToString("MMMM yyyy").ToUpper()</div>
             <div class="ma__stats-table">
@@ -116,13 +114,13 @@
                 </div>
                 @foreach (var p in _players.OrderByDescending(p => GetAttendancePct(p.Id)))
                 {
-                    var (pres, total) = _monthlyStats.GetValueOrDefault(p.Id, (0, _totalSessions));
-                    var pct = total > 0 ? (int)Math.Round((double)pres / total * 100) : 0;
+                    var stats = _monthlyStats.GetValueOrDefault(p.Id, (0, _totalSessions));
+                    var pct = stats.Total > 0 ? (int)Math.Round((double)stats.Present / stats.Total * 100) : 0;
                     <div class="ma__stats-row">
                         <span class="ma__stats-alias">@p.Alias</span>
                         <span class="ma__stats-pos">@p.PrimaryPosition.Code</span>
-                        <span>@pres</span>
-                        <span>@total</span>
+                        <span>@stats.Present</span>
+                        <span>@stats.Total</span>
                         <div class="ma__bar-wrap">
                             <div class="ma__bar-bg">
                                 <div class="ma__bar-fill @GetPctClass(pct)" style="width:@pct%"></div>
@@ -137,29 +135,36 @@
 </div>
 
 @code {
+    // ── State ─────────────────────────────────────────────
     private DateOnly _currentDate = DateOnly.FromDateTime(DateTime.Today).AddDays(1 - DateTime.Today.Day);
     private List<Player> _players = [];
     private List<TrainingAttendance> _monthAttendance = [];
     private Dictionary<int, (int Present, int Total)> _monthlyStats = [];
-    private List<List<DateOnly?>> _calendarWeeks = [];
+    private List<DateOnly?> _calendarDays = []; // flat list — no nested loops
     private DateOnly? _selectedDay;
     private Dictionary<int, bool> _sessionChecks = [];
     private bool _loading = true;
     private int _totalSessions;
     private bool _disposed;
 
+    // ── Computed ──────────────────────────────────────────
     private bool IsCurrentMonth =>
-        _currentDate.Year == DateTime.Today.Year && _currentDate.Month == DateTime.Today.Month;
+        _currentDate.Year == DateTime.Today.Year &&
+        _currentDate.Month == DateTime.Today.Month;
 
     private static bool IsTrainingDay(DateOnly d) =>
-        d.DayOfWeek is DayOfWeek.Monday or DayOfWeek.Tuesday or DayOfWeek.Wednesday or DayOfWeek.Thursday;
+        d.DayOfWeek is DayOfWeek.Monday or DayOfWeek.Tuesday
+                    or DayOfWeek.Wednesday or DayOfWeek.Thursday;
 
+    // ── Lifecycle ─────────────────────────────────────────
     protected override async Task OnInitializedAsync() => await LoadAsync();
 
     private async Task LoadAsync()
     {
         if (_disposed) return;
         _loading = true;
+        StateHasChanged();
+
         try
         {
             _players = await PlayerSvc.GetAllAsync();
@@ -171,36 +176,43 @@
             _sessionChecks = [];
         }
         catch (ObjectDisposedException) { return; }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error cargando asistencia: {ex.Message}", Severity.Error);
+        }
         finally
         {
             if (!_disposed) { _loading = false; StateHasChanged(); }
         }
     }
 
+    // ── Calendar — flat List<DateOnly?> ───────────────────
     private void BuildCalendar()
     {
-        _calendarWeeks = [];
+        _calendarDays = [];
         var first = _currentDate;
         var last = first.AddMonths(1).AddDays(-1);
-        var dow = (int)first.DayOfWeek;
-        var offset = dow == 0 ? 6 : dow - 1;
+
+        // Monday-first offset
+        var dow = (int)first.DayOfWeek;          // Sun=0 Mon=1 ... Sat=6
+        var offset = dow == 0 ? 6 : dow - 1;       // Mon=0 ... Sun=6
         var cursor = first.AddDays(-offset);
 
         while (cursor <= last)
         {
-            var week = new List<DateOnly?>();
             for (int i = 0; i < 7; i++)
             {
                 var d = cursor.AddDays(i);
-                week.Add(d.Month == _currentDate.Month ? d : (DateOnly?)null);
+                _calendarDays.Add(d.Month == _currentDate.Month ? d : (DateOnly?)null);
             }
-            if (week.Any(x => x.HasValue)) _calendarWeeks.Add(week);
             cursor = cursor.AddDays(7);
         }
     }
 
-    private void SelectDay(DateOnly day)
+    // ── Event handlers ────────────────────────────────────
+    private void OnDayClick(DateOnly day, bool isTraining, bool isFuture)
     {
+        if (!isTraining || isFuture) return;
         _selectedDay = day;
         _sessionChecks = _players.ToDictionary(
             p => p.Id,
@@ -218,6 +230,20 @@
         await LoadAsync();
     }
 
+    private async Task PrevMonth()
+    {
+        _currentDate = _currentDate.AddMonths(-1);
+        await LoadAsync();
+    }
+
+    private async Task NextMonth()
+    {
+        if (IsCurrentMonth) return;
+        _currentDate = _currentDate.AddMonths(1);
+        await LoadAsync();
+    }
+
+    // ── Helpers ───────────────────────────────────────────
     private int GetDayAttendancePct(DateOnly day)
     {
         if (_players.Count == 0) return 0;
@@ -227,8 +253,8 @@
 
     private int GetAttendancePct(int playerId)
     {
-        var (pres, total) = _monthlyStats.GetValueOrDefault(playerId, (0, _totalSessions));
-        return total > 0 ? (int)Math.Round((double)pres / total * 100) : 0;
+        var s = _monthlyStats.GetValueOrDefault(playerId, (0, _totalSessions));
+        return s.Total > 0 ? (int)Math.Round((double)s.Present / s.Total * 100) : 0;
     }
 
     private static string GetPctClass(int pct) => pct switch
@@ -238,8 +264,8 @@
         _ => "ma__pct--low"
     };
 
-    private async Task PrevMonth() { _currentDate = _currentDate.AddMonths(-1); await LoadAsync(); }
-    private async Task NextMonth() { if (!IsCurrentMonth) { _currentDate = _currentDate.AddMonths(1); await LoadAsync(); } }
-    private static string Initials(string alias) => alias.Length >= 2 ? alias[..2].ToUpper() : alias.ToUpper();
+    private static string Initials(string alias) =>
+        alias.Length >= 2 ? alias[..2].ToUpper() : alias.ToUpper();
+
     public void Dispose() => _disposed = true;
 }

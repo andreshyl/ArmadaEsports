@@ -1,0 +1,243 @@
+@namespace Armada.Web.Components.Pages.ManagerComponents
+@using ArmadaEsports.Core.Interfaces
+@using ArmadaEsports.Core.Models
+@inject IAttendanceService AttendanceSvc
+@inject IPlayerService PlayerSvc
+@inject ISnackbar Snackbar
+@implements IDisposable
+
+<div class="ma__wrap">
+
+    <div class="ma__header">
+        <span class="ma__label">CONTROL DE ASISTENCIA</span>
+        <div class="ma__nav">
+            <button class="ma__nav-btn" @onclick="PrevMonth">&#8249;</button>
+            <span class="ma__month-label">@_currentDate.ToString("MMMM yyyy").ToUpper()</span>
+            <button class="ma__nav-btn" @onclick="NextMonth" disabled="@IsCurrentMonth">&#8250;</button>
+        </div>
+    </div>
+
+    @if (_loading)
+    {
+        <MudProgressLinear Color="Color.Warning" Indeterminate="true" Class="my-2" />
+    }
+    else
+    {
+        <div class="ma__body">
+
+            <!-- CALENDAR: full month, all days, 7 cols -->
+            <div class="ma__calendar-col">
+                <div class="ma__calendar">
+                    @foreach (var label in new[] { "LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB", "DOM" })
+                    {
+                        var isTraining = label is "LUN" or "MAR" or "MIÉ" or "JUE";
+                        <div class="ma__cal-header @(isTraining ? "ma__cal-header--training" : "ma__cal-header--rest")">@label</div>
+                    }
+                    @foreach (var week in _calendarWeeks)
+                    {
+                        @foreach (var day in week)
+                        {
+                            @if (day is null)
+                            {
+                                <div class="ma__cal-cell ma__cal-cell--empty"></div>
+                            }
+                            else
+                            {
+                                var isTraining = IsTrainingDay(day.Value);
+                                var isFuture = day.Value > DateOnly.FromDateTime(DateTime.Today);
+                                var isSelected = _selectedDay == day;
+                                var pct = !isFuture && isTraining ? GetDayAttendancePct(day.Value) : (int?)null;
+
+                                <div class="ma__cal-cell
+                                    @(isTraining ? "ma__cal-cell--training" : "ma__cal-cell--rest")
+                                    @(isSelected ? "ma__cal-cell--active" : "")
+                                    @(isFuture ? "ma__cal-cell--future" : "")
+                                    @(!isTraining ? "ma__cal-cell--noclick" : "")"
+                                     @onclick="() => { if (isTraining && !isFuture) SelectDay(day.Value); }">
+                                    <span class="ma__day-num">@day.Value.Day</span>
+                                    @if (pct.HasValue)
+                                    {
+                                        <span class="ma__day-pct @GetPctClass(pct.Value)">@pct%</span>
+                                    }
+                                </div>
+                            }
+                        }
+                    }
+                </div>
+            </div>
+
+            <!-- SESSION PANEL -->
+            <div class="ma__session-col">
+                @if (_selectedDay.HasValue)
+                {
+                    <div class="ma__session-header">
+                        <span class="ma__session-date">@_selectedDay.Value.ToString("ddd dd/MM/yyyy").ToUpper()</span>
+                        <button class="ma__save-btn" @onclick="SaveSession">GUARDAR</button>
+                    </div>
+                    <div class="ma__player-list">
+                        @foreach (var p in _players)
+                        {
+                            var present = _sessionChecks.GetValueOrDefault(p.Id, false);
+                            <div class="ma__player-row @(present ? "ma__player-row--present" : "")"
+                                 @onclick="() => TogglePlayer(p.Id)">
+                                <div class="ma__player-avatar">
+                                    @(p.JerseyNumber?.ToString() ?? Initials(p.Alias))
+                                </div>
+                                <span class="ma__player-alias">@p.Alias</span>
+                                <span class="ma__player-pos">@p.PrimaryPosition.Code</span>
+                                <div class="ma__check @(present ? "ma__check--on" : "")">
+                                    @if (present)
+                                    {
+                                        <span>&#10003;</span>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="ma__session-empty">
+                        <span>Selecciona un día de entrenamiento</span>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- MONTHLY STATS -->
+        <div class="ma__stats">
+            <div class="ma__stats-header">RENDIMIENTO MENSUAL — @_currentDate.ToString("MMMM yyyy").ToUpper()</div>
+            <div class="ma__stats-table">
+                <div class="ma__stats-row ma__stats-row--head">
+                    <span>JUGADOR</span><span>POS</span><span>ASIST.</span><span>TOTAL</span><span>%</span>
+                </div>
+                @foreach (var p in _players.OrderByDescending(p => GetAttendancePct(p.Id)))
+                {
+                    var (pres, total) = _monthlyStats.GetValueOrDefault(p.Id, (0, _totalSessions));
+                    var pct = total > 0 ? (int)Math.Round((double)pres / total * 100) : 0;
+                    <div class="ma__stats-row">
+                        <span class="ma__stats-alias">@p.Alias</span>
+                        <span class="ma__stats-pos">@p.PrimaryPosition.Code</span>
+                        <span>@pres</span>
+                        <span>@total</span>
+                        <div class="ma__bar-wrap">
+                            <div class="ma__bar-bg">
+                                <div class="ma__bar-fill @GetPctClass(pct)" style="width:@pct%"></div>
+                            </div>
+                            <span class="@GetPctClass(pct) ma__bar-label">@pct%</span>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private DateOnly _currentDate = DateOnly.FromDateTime(DateTime.Today).AddDays(1 - DateTime.Today.Day);
+    private List<Player> _players = [];
+    private List<TrainingAttendance> _monthAttendance = [];
+    private Dictionary<int, (int Present, int Total)> _monthlyStats = [];
+    private List<List<DateOnly?>> _calendarWeeks = [];
+    private DateOnly? _selectedDay;
+    private Dictionary<int, bool> _sessionChecks = [];
+    private bool _loading = true;
+    private int _totalSessions;
+    private bool _disposed;
+
+    private bool IsCurrentMonth =>
+        _currentDate.Year == DateTime.Today.Year && _currentDate.Month == DateTime.Today.Month;
+
+    private static bool IsTrainingDay(DateOnly d) =>
+        d.DayOfWeek is DayOfWeek.Monday or DayOfWeek.Tuesday or DayOfWeek.Wednesday or DayOfWeek.Thursday;
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        if (_disposed) return;
+        _loading = true;
+        try
+        {
+            _players = await PlayerSvc.GetAllAsync();
+            _monthAttendance = await AttendanceSvc.GetByMonthAsync(_currentDate.Year, _currentDate.Month);
+            _monthlyStats = await AttendanceSvc.GetMonthlyStatsAsync(_currentDate.Year, _currentDate.Month);
+            _totalSessions = _monthlyStats.Values.Select(v => v.Total).FirstOrDefault();
+            BuildCalendar();
+            _selectedDay = null;
+            _sessionChecks = [];
+        }
+        catch (ObjectDisposedException) { return; }
+        finally
+        {
+            if (!_disposed) { _loading = false; StateHasChanged(); }
+        }
+    }
+
+    private void BuildCalendar()
+    {
+        _calendarWeeks = [];
+        var first = _currentDate;
+        var last = first.AddMonths(1).AddDays(-1);
+        var dow = (int)first.DayOfWeek; // Sun=0
+        // Adjust to Monday-first: Mon=0 ... Sun=6
+        var offset = dow == 0 ? 6 : dow - 1;
+        var cursor = first.AddDays(-offset);
+
+        while (cursor <= last)
+        {
+            var week = new List<DateOnly?>();
+            for (int i = 0; i < 7; i++)
+            {
+                var d = cursor.AddDays(i);
+                week.Add(d.Month == _currentDate.Month ? d : (DateOnly?)null);
+            }
+            if (week.Any(x => x.HasValue)) _calendarWeeks.Add(week);
+            cursor = cursor.AddDays(7);
+        }
+    }
+
+    private void SelectDay(DateOnly day)
+    {
+        _selectedDay = day;
+        _sessionChecks = _players.ToDictionary(
+            p => p.Id,
+            p => _monthAttendance.Any(a => a.PlayerId == p.Id && a.SessionDate == day && a.Present));
+    }
+
+    private void TogglePlayer(int playerId) =>
+        _sessionChecks[playerId] = !_sessionChecks.GetValueOrDefault(playerId);
+
+    private async Task SaveSession()
+    {
+        if (!_selectedDay.HasValue || _disposed) return;
+        await AttendanceSvc.UpsertBatchAsync(_sessionChecks, _selectedDay.Value);
+        Snackbar.Add("Asistencia guardada", Severity.Success);
+        await LoadAsync();
+    }
+
+    private int GetDayAttendancePct(DateOnly day)
+    {
+        if (_players.Count == 0) return 0;
+        var present = _monthAttendance.Count(a => a.SessionDate == day && a.Present);
+        return (int)Math.Round((double)present / _players.Count * 100);
+    }
+
+    private int GetAttendancePct(int playerId)
+    {
+        var (pres, total) = _monthlyStats.GetValueOrDefault(playerId, (0, _totalSessions));
+        return total > 0 ? (int)Math.Round((double)pres / total * 100) : 0;
+    }
+
+    private static string GetPctClass(int pct) => pct switch
+    {
+        >= 80 => "ma__pct--high",
+        >= 50 => "ma__pct--mid",
+        _ => "ma__pct--low"
+    };
+
+    private async Task PrevMonth() { _currentDate = _currentDate.AddMonths(-1); await LoadAsync(); }
+    private async Task NextMonth() { if (!IsCurrentMonth) { _currentDate = _currentDate.AddMonths(1); await LoadAsync(); } }
+    private static string Initials(string alias) => alias.Length >= 2 ? alias[..2].ToUpper() : alias.ToUpper();
+    public void Dispose() => _disposed = true;
+}

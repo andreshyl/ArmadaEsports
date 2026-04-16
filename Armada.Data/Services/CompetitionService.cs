@@ -5,20 +5,25 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ArmadaEsports.Data.Services;
 
-public class CompetitionService(ArmadaDbContext db) : ICompetitionService
+public class CompetitionService(IDbContextFactory<ArmadaDbContext> factory) : ICompetitionService
 {
     public async Task<List<Competition>> GetAllAsync(bool includeInactive = false)
     {
+        await using var db = await factory.CreateDbContextAsync();
         var query = db.Competitions.Include(c => c.Matches).AsQueryable();
         if (!includeInactive) query = query.Where(c => c.IsActive);
         return await query.OrderBy(c => c.Name).ToListAsync();
     }
 
-    public async Task<Competition?> GetByIdAsync(int id) =>
-        await db.Competitions.Include(c => c.Matches).FirstOrDefaultAsync(c => c.Id == id);
+    public async Task<Competition?> GetByIdAsync(int id)
+    {
+        await using var db = await factory.CreateDbContextAsync();
+        return await db.Competitions.Include(c => c.Matches).FirstOrDefaultAsync(c => c.Id == id);
+    }
 
     public async Task<Competition> CreateAsync(Competition competition)
     {
+        await using var db = await factory.CreateDbContextAsync();
         db.Competitions.Add(competition);
         await db.SaveChangesAsync();
         return competition;
@@ -26,26 +31,18 @@ public class CompetitionService(ArmadaDbContext db) : ICompetitionService
 
     public async Task<Competition> UpdateAsync(Competition competition)
     {
+        await using var db = await factory.CreateDbContextAsync();
         db.Competitions.Update(competition);
         await db.SaveChangesAsync();
         return competition;
     }
 
-    public async Task SetActiveAsync(int id, bool isActive)
+    public async Task DeleteAsync(int competitionId)
     {
-        var c = await db.Competitions.FindAsync(id)
-            ?? throw new KeyNotFoundException($"Competition {id} not found.");
-        c.IsActive = isActive;
-        await db.SaveChangesAsync();
-    }
-
-    public async Task DeleteAsync(int id)
-    {
-        var c = await db.Competitions
-            .Include(c => c.Matches)
-            .FirstOrDefaultAsync(c => c.Id == id);
-        if (c is null) return;
-        db.Competitions.Remove(c);
+        await using var db = await factory.CreateDbContextAsync();
+        var competition = await db.Competitions.FindAsync(competitionId)
+            ?? throw new KeyNotFoundException($"Competition {competitionId} not found.");
+        db.Competitions.Remove(competition);
         await db.SaveChangesAsync();
     }
 }

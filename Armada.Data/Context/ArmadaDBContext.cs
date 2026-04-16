@@ -14,6 +14,7 @@ public class ArmadaDbContext : DbContext
     public DbSet<Player> Players => Set<Player>();
     public DbSet<PlayerAttributeSnapshot> PlayerAttributeSnapshots => Set<PlayerAttributeSnapshot>();
     public DbSet<PlayerAttributeScore> PlayerAttributeScores => Set<PlayerAttributeScore>();
+    public DbSet<TrainingAttendance> TrainingAttendances => Set<TrainingAttendance>();
     public DbSet<Competition> Competitions => Set<Competition>();
     public DbSet<Match> Matches => Set<Match>();
     public DbSet<MatchPerformanceStat> MatchPerformanceStats => Set<MatchPerformanceStat>();
@@ -59,6 +60,14 @@ public class ArmadaDbContext : DbContext
             e.HasKey(x => x.Id);
             e.HasIndex(x => new { x.SnapshotId, x.AttributeIndex }).IsUnique();
             e.HasOne(x => x.Snapshot).WithMany(x => x.Scores).HasForeignKey(x => x.SnapshotId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<TrainingAttendance>(e =>
+        {
+            e.ToTable("TrainingAttendances");
+            e.HasIndex(x => new { x.PlayerId, x.SessionDate }).IsUnique();
+            e.HasOne(x => x.Player).WithMany()
+                .HasForeignKey(x => x.PlayerId).OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<Competition>(e =>

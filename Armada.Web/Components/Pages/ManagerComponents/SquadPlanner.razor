@@ -191,12 +191,12 @@
         ["4-4-2"] =
         [
             new("GK",  "PO",  "GK",      92, 50),
-            new("CBi", "DFC", "CB",       79, 33),
+            new("CBi", "DFI", "CB",       79, 33),
             new("CBd", "DFD", "CB",       79, 67),
-            new("LB",  "LD",  "LB",       70,  8),
+            new("LB",  "LI",  "LB",       70,  8),
             new("RB",  "LD",  "RB",       70, 92),
             new("CDM", "MCD", "CDM",      57, 36),
-            new("CM",  "MC",  "CM",       57, 64),
+            new("CM",  "MVD", "CM",       57, 64),
             new("LM",  "MI",  "LM",       35,  8),
             new("RM",  "MD",  "RM",       35, 92),
             new("SS",  "DCI", "SS",       20, 36),
@@ -392,8 +392,8 @@
     {
         string[][] groups =
         [
-            ["DFC", "DFD", "DFI", "LD"],
-            ["MC", "MI", "MCD", "MVI"],
+            ["DFD", "DFI", "LD", "LI"],
+            ["MVD", "MCD", "MI", "MD"],
             ["DC", "DCI", "MD"],
         ];
         return groups.Any(g => g.Contains(a) && g.Contains(b));

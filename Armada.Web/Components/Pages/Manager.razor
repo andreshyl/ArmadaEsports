@@ -41,7 +41,7 @@
                 <ManagerPlantilla Players="_players" Ratings="_ratings" OnDataChanged="LoadDataAsync" />
             </MudItem>
 
-            <!-- SQUAD PLANNER + COMPETITIONS stacked in right column -->
+            <!-- SQUAD PLANNER + COMPETITIONS -->
             <MudItem xs="12" md="6">
                 <MudStack Spacing="4">
                     <div class="manager__section-card">
@@ -56,6 +56,11 @@
                 <ManagerMatches Matches="_matches"
                                 Competitions="_competitions"
                                 OnDataChanged="LoadDataAsync" />
+            </MudItem>
+
+            <!-- ATTENDANCE -->
+            <MudItem xs="12">
+                <ManagerAttendance />
             </MudItem>
 
         </MudGrid>

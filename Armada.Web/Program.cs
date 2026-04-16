@@ -15,7 +15,8 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddMudServices();
 
-builder.Services.AddDbContext<ArmadaDbContext>(options =>
+// Switch to factory — fixes concurrent DbContext across all Blazor components
+builder.Services.AddDbContextFactory<ArmadaDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("ArmadaDb")));
 
 // Auth
@@ -33,6 +34,7 @@ builder.Services.AddScoped<IMatchService, MatchService>();
 builder.Services.AddScoped<ICompetitionService, CompetitionService>();
 builder.Services.AddScoped<IAttributeService, AttributeService>();
 builder.Services.AddScoped<IAiParserService, AiParserService>();
+builder.Services.AddScoped<IAttendanceService, AttendanceService>();
 builder.Services.AddSingleton<ISquadPlannerService, SquadPlannerService>();
 
 builder.Services.AddDataProtection()

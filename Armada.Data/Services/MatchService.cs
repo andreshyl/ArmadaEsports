@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ArmadaEsports.Data.Services;
 
-public class MatchService(ArmadaDbContext db) : IMatchService
+public class MatchService(IDbContextFactory<ArmadaDbContext> factory) : IMatchService
 {
     private static IQueryable<Match> WithIncludes(IQueryable<Match> q) =>
         q.Include(m => m.Competition)
@@ -15,49 +15,68 @@ public class MatchService(ArmadaDbContext db) : IMatchService
                  .ThenInclude(p => p!.PrimaryPosition)
          .Include(m => m.ParseJobs);
 
-    public async Task<List<Match>> GetAllAsync() =>
-        await WithIncludes(db.Matches).OrderByDescending(m => m.MatchDate).ToListAsync();
+    public async Task<List<Match>> GetAllAsync()
+    {
+        await using var db = await factory.CreateDbContextAsync();
+        return await WithIncludes(db.Matches).OrderByDescending(m => m.MatchDate).ToListAsync();
+    }
 
-    public async Task<List<Match>> GetByCompetitionAsync(int competitionId) =>
-        await WithIncludes(db.Matches)
+    public async Task<List<Match>> GetByCompetitionAsync(int competitionId)
+    {
+        await using var db = await factory.CreateDbContextAsync();
+        return await WithIncludes(db.Matches)
             .Where(m => m.CompetitionId == competitionId)
             .OrderByDescending(m => m.MatchDate).ToListAsync();
+    }
 
-    public async Task<List<Match>> GetUpcomingAsync() =>
-        await WithIncludes(db.Matches)
+    public async Task<List<Match>> GetUpcomingAsync()
+    {
+        await using var db = await factory.CreateDbContextAsync();
+        return await WithIncludes(db.Matches)
             .Where(m => m.Status == EMatchStatus.Upcoming)
             .OrderBy(m => m.MatchDate).ToListAsync();
+    }
 
-    public async Task<List<Match>> GetFinishedAsync() =>
-        await WithIncludes(db.Matches)
+    public async Task<List<Match>> GetFinishedAsync()
+    {
+        await using var db = await factory.CreateDbContextAsync();
+        return await WithIncludes(db.Matches)
             .Where(m => m.Status == EMatchStatus.Finished)
             .OrderByDescending(m => m.MatchDate).ToListAsync();
+    }
 
-    public async Task<Match?> GetByIdAsync(int id) =>
-        await WithIncludes(db.Matches).FirstOrDefaultAsync(m => m.Id == id);
+    public async Task<Match?> GetByIdAsync(int id)
+    {
+        await using var db = await factory.CreateDbContextAsync();
+        return await WithIncludes(db.Matches).FirstOrDefaultAsync(m => m.Id == id);
+    }
 
     public async Task<Match> CreateAsync(Match match)
     {
+        await using var db = await factory.CreateDbContextAsync();
         db.Matches.Add(match);
         await db.SaveChangesAsync();
         return match;
     }
 
+    // Interface: Task FinalizeAsync(int, byte, byte) — no return value
     public async Task FinalizeAsync(int id, byte goalsFor, byte goalsAgainst)
     {
+        await using var db = await factory.CreateDbContextAsync();
         var match = await db.Matches.FindAsync(id)
             ?? throw new KeyNotFoundException($"Match {id} not found.");
         match.GoalsFor = goalsFor;
         match.GoalsAgainst = goalsAgainst;
         match.Status = EMatchStatus.Finished;
         match.Result = goalsFor > goalsAgainst ? EMatchResult.W
-                           : goalsFor < goalsAgainst ? EMatchResult.L
-                           : EMatchResult.D;
+                     : goalsFor < goalsAgainst ? EMatchResult.L
+                     : EMatchResult.D;
         await db.SaveChangesAsync();
     }
 
     public async Task AddPerformanceStatAsync(MatchPerformanceStat stat)
     {
+        await using var db = await factory.CreateDbContextAsync();
         var existing = await db.MatchPerformanceStats
             .FirstOrDefaultAsync(s => s.MatchId == stat.MatchId && s.PlayerId == stat.PlayerId);
         if (existing is not null)
@@ -82,6 +101,7 @@ public class MatchService(ArmadaDbContext db) : IMatchService
 
     public async Task DeleteAsync(int matchId)
     {
+        await using var db = await factory.CreateDbContextAsync();
         var match = await db.Matches
             .Include(m => m.PerformanceStats)
             .Include(m => m.ParseJobs)
@@ -90,11 +110,13 @@ public class MatchService(ArmadaDbContext db) : IMatchService
         db.Matches.Remove(match);
         await db.SaveChangesAsync();
     }
+
     public async Task UpdateMatchFactsAsync(int matchId, byte? possession, byte? shotsFor,
         byte? shotsAgainst, short? passesAttempted, byte? passAccuracy,
         byte? tacklesFor, byte? tacklesAgainst,
         byte? possessionOpp = null, short? passesAttemptedOpp = null, byte? passAccuracyOpp = null)
     {
+        await using var db = await factory.CreateDbContextAsync();
         var match = await db.Matches.FindAsync(matchId)
             ?? throw new KeyNotFoundException($"Match {matchId} not found.");
         match.PossessionPct = possession;
@@ -109,5 +131,4 @@ public class MatchService(ArmadaDbContext db) : IMatchService
         match.PassAccuracyPctOpp = passAccuracyOpp;
         await db.SaveChangesAsync();
     }
-
 }

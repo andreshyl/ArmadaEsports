@@ -6,26 +6,34 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ArmadaEsports.Data.Services;
 
-public class AttributeService(ArmadaDbContext db) : IAttributeService
+public class AttributeService(IDbContextFactory<ArmadaDbContext> factory) : IAttributeService
 {
-    public async Task<List<PlayerAttributeSnapshot>> GetSnapshotsByPlayerAsync(int playerId) =>
-        await db.PlayerAttributeSnapshots
+    public async Task<List<PlayerAttributeSnapshot>> GetSnapshotsByPlayerAsync(int playerId)
+    {
+        await using var db = await factory.CreateDbContextAsync();
+        return await db.PlayerAttributeSnapshots
             .Include(s => s.Scores)
             .Where(s => s.PlayerId == playerId)
             .OrderByDescending(s => s.SnapshotDate)
             .ToListAsync();
+    }
 
-    public async Task<PlayerAttributeSnapshot?> GetLatestSnapshotAsync(int playerId) =>
-        await db.PlayerAttributeSnapshots
+    public async Task<PlayerAttributeSnapshot?> GetLatestSnapshotAsync(int playerId)
+    {
+        await using var db = await factory.CreateDbContextAsync();
+        return await db.PlayerAttributeSnapshots
             .Include(s => s.Scores)
             .Where(s => s.PlayerId == playerId)
             .OrderByDescending(s => s.SnapshotDate)
             .FirstOrDefaultAsync();
+    }
 
     public async Task<PlayerAttributeSnapshot> SaveSnapshotAsync(
         int playerId, string positionCode, byte[] scores, string? notes)
     {
+        await using var db = await factory.CreateDbContextAsync();
         var today = DateOnly.FromDateTime(DateTime.Today);
+
         var existing = await db.PlayerAttributeSnapshots
             .Include(s => s.Scores)
             .FirstOrDefaultAsync(s => s.PlayerId == playerId && s.SnapshotDate == today);
@@ -65,6 +73,7 @@ public class AttributeService(ArmadaDbContext db) : IAttributeService
 
     public async Task DeleteSnapshotAsync(int snapshotId)
     {
+        await using var db = await factory.CreateDbContextAsync();
         var snapshot = await db.PlayerAttributeSnapshots
             .Include(s => s.Scores)
             .FirstOrDefaultAsync(s => s.Id == snapshotId);
@@ -73,23 +82,20 @@ public class AttributeService(ArmadaDbContext db) : IAttributeService
         await db.SaveChangesAsync();
     }
 
+    // Sync — no DB access, pure computation
     public decimal ComputeOverallRating(string positionCode, byte[] scores) =>
         AttributeWeights.ComputeOverallRating(positionCode, scores);
 
-    // Returns average score per attribute index across all snapshots
     public decimal[] ComputeAverageScores(IEnumerable<PlayerAttributeSnapshot> snapshots)
     {
         var list = snapshots.ToList();
         var result = new decimal[10];
         if (!list.Any()) return result;
-
         for (int i = 0; i < 10; i++)
         {
-            var allScores = list
-                .SelectMany(s => s.Scores)
+            var allScores = list.SelectMany(s => s.Scores)
                 .Where(s => s.AttributeIndex == i)
-                .Select(s => (decimal)s.Score)
-                .ToList();
+                .Select(s => (decimal)s.Score).ToList();
             result[i] = allScores.Any() ? Math.Round(allScores.Average(), 1) : 0;
         }
         return result;

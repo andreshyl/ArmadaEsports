@@ -1,0 +1,44 @@
+@namespace Armada.Web.Components.Pages.ManagerComponents
+@inject IDialogService DialogService
+
+<div class="manager__section-card">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-3">
+        <MudText Typo="Typo.caption" Class="manager__section-title">COMPETITIONS</MudText>
+        <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning"
+                   OnClick="OpenAddCompetition">+ Add Competition</MudButton>
+    </MudStack>
+
+    <MudTable T="Competition" Items="Competitions" Dense="true" Elevation="0">
+        <HeaderContent>
+            <MudTh>Name</MudTh><MudTh>Type</MudTh><MudTh></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd Class="manager__player-alias">@context.Name</MudTd>
+            <MudTd>@context.CompetitionType</MudTd>
+            <MudTd>
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small"
+                               Color="Color.Error" OnClick="@(() => DeleteCompetition(context))" />
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+</div>
+
+@code {
+    [Parameter] public List<Competition> Competitions   { get; set; } = [];
+    [Parameter] public EventCallback     OnDataChanged  { get; set; }
+
+    private async Task OpenAddCompetition()
+    {
+        var dialog = await DialogService.ShowAsync<AddCompetitionDialog>("Add Competition",
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseButton = true });
+        if (!(await dialog.Result)!.Canceled) await OnDataChanged.InvokeAsync();
+    }
+
+    private async Task DeleteCompetition(Competition c)
+    {
+        var result = await DialogService.ShowAsync<ConfirmDialog>("Delete Competition",
+            new DialogParameters { { "Message", $"Delete \"{c.Name}\"? All related matches will also be removed." } },
+            new DialogOptions { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true });
+        if (!(await result.Result)!.Canceled) await OnDataChanged.InvokeAsync();
+    }
+}

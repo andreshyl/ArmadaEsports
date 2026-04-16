@@ -15,22 +15,7 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddMudServices();
 
-// SignalR: raise message size limit for image/CSV uploads and extend disconnect timeout
-builder.Services.AddSignalR(options =>
-{
-    options.MaximumReceiveMessageSize = 50 * 1024 * 1024; // 50 MB
-    options.ClientTimeoutInterval     = TimeSpan.FromSeconds(60);
-    options.HandshakeTimeout          = TimeSpan.FromSeconds(30);
-});
-
-builder.Services.AddServerSideBlazor(options =>
-{
-    options.DetailedErrors              = builder.Environment.IsDevelopment();
-    options.DisconnectedCircuitMaxRetained = 100;
-    options.DisconnectedCircuitRetentionPeriod = TimeSpan.FromMinutes(3);
-});
-
-builder.Services.AddDbContextPool<ArmadaDbContext>(options =>
+builder.Services.AddDbContext<ArmadaDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("ArmadaDb")));
 
 // Auth
@@ -48,6 +33,7 @@ builder.Services.AddScoped<IMatchService, MatchService>();
 builder.Services.AddScoped<ICompetitionService, CompetitionService>();
 builder.Services.AddScoped<IAttributeService, AttributeService>();
 builder.Services.AddScoped<IAiParserService, AiParserService>();
+builder.Services.AddSingleton<ISquadPlannerService, SquadPlannerService>();
 
 builder.Services.AddDataProtection()
     .PersistKeysToFileSystem(new DirectoryInfo("/var/www/ttfesports-keys"))

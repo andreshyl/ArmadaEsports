@@ -1,0 +1,113 @@
+@namespace Armada.Web.Components.Pages.ManagerComponents
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<div class="manager__section-card manager__plantilla-wrap">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-3">
+        <MudText Typo="Typo.caption" Class="manager__section-title">PLANTILLA</MudText>
+        <MudStack Row="true" Spacing="1">
+            <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning"
+                       OnClick="OpenCsvPlayerImport">CSV Players</MudButton>
+            <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning"
+                       OnClick="OpenCsvAttributeImport">CSV Attrs</MudButton>
+            <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning"
+                       OnClick="OpenAddPlayer">+ Add Player</MudButton>
+        </MudStack>
+    </MudStack>
+
+    <MudTable T="Player" Items="Players" Dense="true" Elevation="0">
+        <HeaderContent>
+            <MudTh>#</MudTh><MudTh>Player</MudTh><MudTh>Pos</MudTh><MudTh>OVR</MudTh><MudTh></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.JerseyNumber</MudTd>
+            <MudTd>
+                <div class="mp__player-cell">
+                    <div class="mp__avatar @(context.PrimaryPosition?.Code == "PO" ? "mp__avatar--gk" : "")">
+                        @Initials(context.Alias)
+                    </div>
+                    <span class="manager__player-alias">@context.Alias</span>
+                </div>
+            </MudTd>
+            <MudTd>
+                <MudChip T="string" Size="Size.Small" Class="ttf-chip--dark">
+                    @context.PrimaryPosition?.Code
+                </MudChip>
+            </MudTd>
+            <MudTd>
+                @if (Ratings.TryGetValue(context.Id, out var ovr))
+                {
+                    <MudChip T="string" Size="Size.Small" Class="ttf-chip--gold">@ovr.ToString("F1")</MudChip>
+                }
+                else
+                {
+                    <span class="mp__no-rating">—</span>
+                }
+            </MudTd>
+            <MudTd>
+                <MudStack Row="true" Spacing="1">
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
+                                   OnClick="@(() => OpenEditPlayer(context))" />
+                    <MudIconButton Icon="@Icons.Material.Filled.BarChart" Size="Size.Small"
+                                   OnClick="@(() => OpenAddSnapshot(context))" />
+                    <MudIconButton Icon="@Icons.Material.Filled.PersonOff" Size="Size.Small"
+                                   Color="Color.Error" OnClick="@(() => DeletePlayer(context))" />
+                </MudStack>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+</div>
+
+@code {
+    [Parameter] public List<Player> Players { get; set; } = [];
+    [Parameter] public Dictionary<int, decimal> Ratings { get; set; } = [];
+    [Parameter] public EventCallback OnDataChanged { get; set; }
+
+    private static string Initials(string alias) =>
+        alias.Length >= 2 ? alias[..2].ToUpper() : alias.ToUpper();
+
+    private async Task OpenAddPlayer()
+    {
+        var dialog = await DialogService.ShowAsync<AddPlayerDialog>("Add Player",
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseButton = true });
+        if (!(await dialog.Result)!.Canceled) await OnDataChanged.InvokeAsync();
+    }
+
+    private async Task OpenEditPlayer(Player p)
+    {
+        var parameters = new DialogParameters { { "Player", p } };
+        var dialog = await DialogService.ShowAsync<EditPlayerDialog>("Edit Player", parameters,
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseButton = true });
+        if (!(await dialog.Result)!.Canceled) await OnDataChanged.InvokeAsync();
+    }
+
+    private async Task OpenAddSnapshot(Player p)
+    {
+        var parameters = new DialogParameters { { "Player", p } };
+        await DialogService.ShowAsync<AddAttributeSnapshotDialog>($"Mental Attrs — {p.Alias}", parameters,
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseButton = true });
+    }
+
+    private async Task DeletePlayer(Player p)
+    {
+        var result = await DialogService.ShowAsync<ConfirmDialog>("Delete Player",
+            new DialogParameters { { "Message", $"Delete {p.Alias}? This cannot be undone." } },
+            new DialogOptions { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true });
+        if (!(await result.Result)!.Canceled) await OnDataChanged.InvokeAsync();
+    }
+
+    private async Task OpenCsvAttributeImport()
+    {
+        var parameters = new DialogParameters { { "Players", Players } };
+        var dialog = await DialogService.ShowAsync<CsvAttributeUploadDialog>("CSV Attribute Import", parameters,
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseButton = true });
+        if (!(await dialog.Result)!.Canceled) await OnDataChanged.InvokeAsync();
+    }
+
+    private async Task OpenCsvPlayerImport()
+    {
+        var dialog = await DialogService.ShowAsync<CsvPlayerImportDialog>("CSV Player Import",
+            new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = true });
+        if (!(await dialog.Result)!.Canceled) await OnDataChanged.InvokeAsync();
+    }
+}

@@ -1,0 +1,418 @@
+@namespace Armada.Web.Components.Pages.ManagerComponents
+@using ArmadaEsports.Core.Models
+@using ArmadaEsports.Core.Interfaces
+@inject ISquadPlannerService PlannerSvc
+@inject ISnackbar Snackbar
+@implements IDisposable
+
+@* ── FORMATION TABS + ACTIONS ──────────────────────── *@
+<div class="sp__toolbar">
+    <div class="sp__toolbar-left">
+        <span class="sp__label">SQUAD PLANNER</span>
+    </div>
+
+    <div class="sp__toolbar-right">
+        <button class="sp__btn" @onclick="OpenLoadDialog">LOAD</button>
+        <button class="sp__btn sp__btn--danger" @onclick="ClearAll">CLEAR</button>
+        <button class="sp__btn sp__btn--primary" @onclick="OpenSaveDialog">SAVE SNAPSHOT</button>
+    </div>
+</div>
+
+@* ── BODY ──────────────────────────────────────────── *@
+<div class="sp__body">
+
+    @* PITCH *@
+    <div class="sp__pitch-wrap">
+        <div class="sp__pitch" @ondragover:preventDefault>
+
+            <svg class="sp__pitch-lines" viewBox="0 0 68 105" preserveAspectRatio="xMidYMid meet">
+                <line x1="0" y1="52.5" x2="68" y2="52.5" stroke="rgba(255,255,255,0.7)" stroke-width="0.4" />
+                <circle cx="34" cy="52.5" r="9.15" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="0.4" />
+                <circle cx="34" cy="52.5" r="0.5" fill="rgba(255,255,255,0.9)" />
+                <rect x="13.84" y="0" width="40.32" height="16.5" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="0.4" />
+                <rect x="24.84" y="0" width="18.32" height="5.5" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="0.3" />
+                <rect x="13.84" y="88.5" width="40.32" height="16.5" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="0.4" />
+                <rect x="24.84" y="99.5" width="18.32" height="5.5" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="0.3" />
+                <circle cx="34" cy="11" r="0.5" fill="rgba(255,255,255,0.8)" />
+                <circle cx="34" cy="94" r="0.5" fill="rgba(255,255,255,0.8)" />
+                <line x1="0" y1="0" x2="68" y2="0" stroke="rgba(255,255,255,0.85)" stroke-width="0.5" />
+                <line x1="0" y1="105" x2="68" y2="105" stroke="rgba(255,255,255,0.85)" stroke-width="0.5" />
+                <line x1="0" y1="0" x2="0" y2="105" stroke="rgba(255,255,255,0.85)" stroke-width="0.5" />
+                <line x1="68" y1="0" x2="68" y2="105" stroke="rgba(255,255,255,0.85)" stroke-width="0.5" />
+            </svg>
+
+            @foreach (var slot in _slots)
+            {
+                var player = slot.PlayerId.HasValue ? Players.FirstOrDefault(p => p.Id == slot.PlayerId) : null;
+                var fit = player is not null ? GetFit(player, slot.PositionCode) : FitLevel.None;
+
+                <div class="sp__slot @(player is not null ? "occupied" : "empty") sp__fit-@fit.ToString().ToLower()"
+                     style="top:@(slot.Top)%;left:@(slot.Left)%"
+                     @ondragover:preventDefault
+                     @ondrop="() => Drop(slot.SlotId)"
+                     @onclick="() => Unassign(slot.SlotId)">
+
+                    @if (player is not null)
+                    {
+                        <div class="sp__node @(slot.PositionCode == "PO" ? "sp__node--gk" : "")"
+                             draggable="true"
+                             @ondragstart="() => DragStart(player.Id)">
+                            <div class="sp__avatar">@(player.JerseyNumber?.ToString() ?? Initials(player.Alias))</div>
+                            <div class="sp__alias">@player.Alias</div>
+                            <div class="sp__slot-label">@slot.Label</div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="sp__empty-node">
+                            <span class="sp__slot-label sp__slot-label--empty">@slot.Label</span>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
+        <div class="sp__pitch-footer">
+            <span class="sp__mono">XI: @_slots.Count(s => s.PlayerId.HasValue) / 11</span>
+            <span class="sp__fit-legend">
+                <span class="sp__dot sp__dot--natural"></span>Natural
+                <span class="sp__dot sp__dot--secondary"></span>Secondary
+                <span class="sp__dot sp__dot--oop"></span>OOP
+            </span>
+        </div>
+        <div class="sp__ratings-row">
+            <div class="sp__rating-card">
+                <span class="sp__rating-label">TEAM OVR</span>
+                <span class="sp__rating-value">@TeamOvr</span>
+            </div>
+            <div class="sp__rating-card sp__rating-card--chem">
+                <span class="sp__rating-label">CHEMISTRY</span>
+                <span class="sp__rating-value">@TeamChemistry<span class="sp__rating-max"> / 10</span></span>
+            </div>
+        </div>
+    </div>
+
+    @* BENCH POOL *@
+    <div class="sp__bench">
+        <div class="sp__bench-header">AVAILABLE</div>
+        <div class="sp__bench-list">
+            @foreach (var p in _bench)
+            {
+                <div class="sp__bench-player"
+                     draggable="true"
+                     @ondragstart="() => DragStart(p.Id)">
+                    <div class="sp__bench-avatar">@(p.JerseyNumber?.ToString() ?? Initials(p.Alias))</div>
+                    <div class="sp__bench-info">
+                        <div class="sp__bench-alias">@p.Alias</div>
+                        <div class="sp__bench-pos">
+                            @p.PrimaryPosition?.Code
+                            @if (p.SecondaryPosition is not null)
+                            {
+                                <span> · @p.SecondaryPosition.Code</span>
+                            }
+                            @if (p.TertiaryPosition is not null)
+                            {
+                                <span> · @p.TertiaryPosition.Code</span>
+                            }
+                        </div>
+                    </div>
+                    <span class="sp__drag-icon">⠿</span>
+                </div>
+            }
+            @if (!_bench.Any())
+            {
+                <div class="sp__bench-empty">All players assigned</div>
+            }
+        </div>
+    </div>
+</div>
+
+@* ── SAVE DIALOG ───────────────────────────────────── *@
+<MudDialog @bind-Visible="_saveOpen" Options="_dlgOpts">
+    <TitleContent><span class="sp__dlg-title">SAVE SNAPSHOT</span></TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="_snapName" Label="Name (e.g. vs Rival — J5)"
+                      Variant="Variant.Outlined" Margin="Margin.Dense" />
+        <MudTextField @bind-Value="_snapNotes" Label="Notes" Lines="2"
+                      Variant="Variant.Outlined" Margin="Margin.Dense" Class="mt-2" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => _saveOpen = false" Variant="Variant.Text">Cancel</MudButton>
+        <MudButton OnClick="Save" Variant="Variant.Filled" Color="Color.Warning">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@* ── LOAD DIALOG ───────────────────────────────────── *@
+<MudDialog @bind-Visible="_loadOpen" Options="_dlgOpts">
+    <TitleContent><span class="sp__dlg-title">LOAD SNAPSHOT</span></TitleContent>
+    <DialogContent>
+        @if (!_snapshots.Any())
+        {
+            <MudText Typo="Typo.caption" Class="sp__no-snaps">No saved snapshots yet.</MudText>
+        }
+        else
+        {
+            <div class="sp__snap-list">
+                @foreach (var s in _snapshots)
+                {
+                    <div class="sp__snap-item" @onclick="() => Load(s)">
+                        <div class="sp__snap-meta">
+                            <span class="sp__snap-name">@s.Name</span>
+                            <span class="sp__snap-badge">@s.Formation</span>
+                        </div>
+                        <div class="sp__snap-sub">
+                            <span class="sp__snap-date">@s.Date</span>
+                            @if (!string.IsNullOrEmpty(s.Notes))
+                            {
+                                <span class="sp__snap-notes">@s.Notes</span>
+                            }
+                        </div>
+                        <button class="sp__snap-del" @onclick:stopPropagation
+                                @onclick="() => DeleteSnap(s.Id)">
+                            ✕
+                        </button>
+                    </div>
+                }
+            </div>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => _loadOpen = false" Variant="Variant.Text">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [Parameter] public List<Player> Players { get; set; } = [];
+    [Parameter] public Dictionary<int, decimal> Ratings { get; set; } = [];
+
+    // ── FORMATION DEFINITIONS ──────────────────────────
+    private static readonly Dictionary<string, List<SlotDef>> _formationDefs = new()
+    {
+        ["4-4-2"] =
+        [
+            new("GK",  "PO",  "GK",      92, 50),
+            new("CBi", "DFC", "CB",       79, 33),
+            new("CBd", "DFD", "CB",       79, 67),
+            new("LB",  "LD",  "LB",       70,  8),
+            new("RB",  "LD",  "RB",       70, 92),
+            new("CDM", "MCD", "CDM",      57, 36),
+            new("CM",  "MC",  "CM",       57, 64),
+            new("LM",  "MI",  "LM",       35,  8),
+            new("RM",  "MD",  "RM",       35, 92),
+            new("SS",  "DCI", "SS",       20, 36),
+            new("CF",  "DC",  "CF",       20, 64),
+        ],
+    };
+
+    // ── COMPUTED ───────────────────────────────────────
+    private string TeamOvr
+    {
+        get
+        {
+            var assignedIds = _slots
+                .Where(s => s.PlayerId.HasValue)
+                .Select(s => s.PlayerId!.Value)
+                .ToList();
+            if (!assignedIds.Any()) return "—";
+            var rated = assignedIds.Where(id => Ratings.ContainsKey(id)).ToList();
+            if (!rated.Any()) return "—";
+            return (rated.Average(id => Ratings[id])).ToString("F1");
+        }
+    }
+
+    private string TeamChemistry
+    {
+        get
+        {
+            var assigned = _slots.Where(s => s.PlayerId.HasValue).ToList();
+            if (!assigned.Any()) return "—";
+            var total = assigned.Sum(s =>
+            {
+                var p = Players.FirstOrDefault(x => x.Id == s.PlayerId);
+                if (p is null) return 0m;
+                return GetFit(p, s.PositionCode) switch
+                {
+                    FitLevel.Natural => 10m,
+                    FitLevel.Secondary => 6m,
+                    FitLevel.OutOfPosition => 2m,
+                    _ => 0m
+                };
+            });
+            return (total / assigned.Count).ToString("F1");
+        }
+    }
+
+    // ── STATE ──────────────────────────────────────────
+    private string _formation = "4-4-2";
+    private List<Slot> _slots = [];
+    private List<Player> _bench = [];
+    private int? _dragId;
+
+    private bool _saveOpen;
+    private bool _loadOpen;
+    private string _snapName = string.Empty;
+    private string _snapNotes = string.Empty;
+    private List<LineupSnapshot> _snapshots = [];
+
+    private readonly DialogOptions _dlgOpts = new()
+    {
+        MaxWidth = MaxWidth.Small,
+        FullWidth = true,
+        BackdropClick = true
+    };
+
+    // ── LIFECYCLE ──────────────────────────────────────
+    protected override void OnParametersSet()
+    {
+        if (!_slots.Any()) BuildSlots(_formation);
+        else RebuildBench();
+    }
+
+    // ── DRAG & DROP ────────────────────────────────────
+    private void DragStart(int playerId) => _dragId = playerId;
+
+    private void Drop(string slotId)
+    {
+        if (_dragId is null) return;
+        Assign(slotId, _dragId.Value);
+        _dragId = null;
+    }
+
+    private void Assign(string slotId, int playerId)
+    {
+        // Remove from any existing slot
+        var prev = _slots.FirstOrDefault(s => s.PlayerId == playerId);
+        if (prev is not null) prev.PlayerId = null;
+
+        var target = _slots.First(s => s.SlotId == slotId);
+
+        // If target occupied, that player goes back to bench (RebuildBench handles it)
+        target.PlayerId = playerId;
+        RebuildBench();
+    }
+
+    private void Unassign(string slotId)
+    {
+        var slot = _slots.FirstOrDefault(s => s.SlotId == slotId);
+        if (slot?.PlayerId is not null) { slot.PlayerId = null; RebuildBench(); }
+    }
+
+    private void ClearAll()
+    {
+        foreach (var s in _slots) s.PlayerId = null;
+        RebuildBench();
+    }
+
+    private void BuildSlots(string f)
+    {
+        _slots = _formationDefs[f]
+            .Select(d => new Slot(d.SlotId, d.PositionCode, d.Label, d.Top, d.Left))
+            .ToList();
+        RebuildBench();
+    }
+
+    private void RebuildBench()
+    {
+        var assigned = _slots.Where(s => s.PlayerId.HasValue)
+                             .Select(s => s.PlayerId!.Value)
+                             .ToHashSet();
+        _bench = Players.Where(p => p.IsActive && !assigned.Contains(p.Id)).ToList();
+    }
+
+    // ── SNAPSHOT ───────────────────────────────────────
+    private void OpenSaveDialog() { _snapName = _snapNotes = string.Empty; _saveOpen = true; }
+
+    private async Task OpenLoadDialog()
+    {
+        _snapshots = await PlannerSvc.GetAllAsync();
+        _loadOpen = true;
+    }
+
+    private async Task Save()
+    {
+        if (string.IsNullOrWhiteSpace(_snapName))
+        { Snackbar.Add("Add a snapshot name.", Severity.Warning); return; }
+
+        var snap = new LineupSnapshot
+        {
+            Name = _snapName,
+            Notes = _snapNotes,
+            Formation = _formation,
+            Lineup = _slots.Where(s => s.PlayerId.HasValue)
+                              .ToDictionary(s => s.SlotId, s => s.PlayerId!.Value),
+            Bench = _bench.Select(p => p.Id).ToList()
+        };
+        await PlannerSvc.SaveAsync(snap);
+        _saveOpen = false;
+        Snackbar.Add($"Snapshot \"{snap.Name}\" saved.", Severity.Success);
+    }
+
+    private void Load(LineupSnapshot snap)
+    {
+        _formation = snap.Formation;
+        BuildSlots(_formation);
+        foreach (var (slotId, pid) in snap.Lineup)
+        {
+            var slot = _slots.FirstOrDefault(s => s.SlotId == slotId);
+            if (slot is not null) slot.PlayerId = pid;
+        }
+        RebuildBench();
+        _loadOpen = false;
+        Snackbar.Add($"Loaded: {snap.Name}", Severity.Info);
+    }
+
+    private async Task DeleteSnap(string id)
+    {
+        await PlannerSvc.DeleteAsync(id);
+        _snapshots = await PlannerSvc.GetAllAsync();
+        Snackbar.Add("Snapshot deleted.", Severity.Warning);
+    }
+
+    // ── HELPERS ────────────────────────────────────────
+    private static string Initials(string alias) =>
+        alias.Length >= 2 ? alias[..2].ToUpper() : alias.ToUpper();
+
+    private static FitLevel GetFit(Player p, string slotCode)
+    {
+        var codes = new[]
+        {
+            p.PrimaryPosition?.Code,
+            p.SecondaryPosition?.Code,
+            p.TertiaryPosition?.Code
+        }.OfType<string>().ToArray();
+
+        if (codes.Length == 0) return FitLevel.None;
+        if (codes[0] == slotCode) return FitLevel.Natural;
+        if (codes.Skip(1).Contains(slotCode)) return FitLevel.Secondary;
+        if (codes.Any(c => AreRelated(c, slotCode))) return FitLevel.Secondary;
+        return FitLevel.OutOfPosition;
+    }
+
+    private static bool AreRelated(string a, string b)
+    {
+        string[][] groups =
+        [
+            ["DFC", "DFD", "DFI", "LD"],
+            ["MC", "MI", "MCD", "MVI"],
+            ["DC", "DCI", "MD"],
+        ];
+        return groups.Any(g => g.Contains(a) && g.Contains(b));
+    }
+
+    public void Dispose() { }
+
+    // ── INNER TYPES ────────────────────────────────────
+    private record SlotDef(string SlotId, string PositionCode, string Label, double Top, double Left);
+
+    private class Slot(string slotId, string positionCode, string label, double top, double left)
+    {
+        public string SlotId { get; } = slotId;
+        public string PositionCode { get; } = positionCode;
+        public string Label { get; } = label;
+        public double Top { get; } = top;
+        public double Left { get; } = left;
+        public int? PlayerId { get; set; }
+    }
+
+    private enum FitLevel { None, Natural, Secondary, OutOfPosition }
+}

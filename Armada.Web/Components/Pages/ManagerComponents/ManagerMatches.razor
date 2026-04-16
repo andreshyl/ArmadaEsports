@@ -1,0 +1,129 @@
+@namespace Armada.Web.Components.Pages.ManagerComponents
+@inject IDialogService DialogService
+
+<div class="manager__section-card">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-3">
+        <MudText Typo="Typo.caption" Class="manager__section-title">MATCHES</MudText>
+        <MudStack Row="true" Spacing="1">
+            <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning" OnClick="OpenAiMatchFacts">AI Match Facts</MudButton>
+            <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning" OnClick="OpenMatchFacts">Match Facts</MudButton>
+            <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning" OnClick="OpenManualUpload">Manual Stats</MudButton>
+            <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning" OnClick="OpenAiUpload">AI Stats</MudButton>
+            <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning" OnClick="OpenCsvImport">CSV Import</MudButton>
+            <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning" OnClick="OpenAddMatch">+ Add Match</MudButton>
+        </MudStack>
+    </MudStack>
+
+    <MudTable T="Match" Items="Matches" Dense="true" Elevation="0">
+        <HeaderContent>
+            <MudTh>Date</MudTh><MudTh>Opponent</MudTh><MudTh>Competition</MudTh>
+            <MudTh>Venue</MudTh><MudTh>Result</MudTh><MudTh></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.MatchDate.ToString("dd MMM")</MudTd>
+            <MudTd Class="manager__match-opponent">@context.OpponentName</MudTd>
+            <MudTd>@context.Competition?.Name</MudTd>
+            <MudTd>@context.Venue</MudTd>
+            <MudTd>
+                @if (context.Status == EMatchStatus.Finished)
+                {
+                    <MudChip T="string" Size="Size.Small" Class="@ResultChipClass(context.Result)">
+                        @context.Result — @context.GoalsFor:@context.GoalsAgainst
+                    </MudChip>
+                }
+                else
+                {
+                    <MudChip T="string" Size="Size.Small">Upcoming</MudChip>
+                }
+            </MudTd>
+            <MudTd>
+                <MudStack Row="true" Spacing="1">
+                    @if (context.Status == EMatchStatus.Upcoming)
+                    {
+                        <MudIconButton Icon="@Icons.Material.Filled.Flag" Size="Size.Small"
+                                       OnClick="@(() => OpenFinalizeMatch(context))" />
+                    }
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small"
+                                   Color="Color.Error" OnClick="@(() => DeleteMatch(context))" />
+                </MudStack>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+</div>
+
+@code {
+    [Parameter] public List<Match>       Matches       { get; set; } = [];
+    [Parameter] public List<Competition> Competitions  { get; set; } = [];
+    [Parameter] public EventCallback     OnDataChanged { get; set; }
+
+    private async Task OpenAddMatch()
+    {
+        var parameters = new DialogParameters { { "Competitions", Competitions } };
+        var dialog = await DialogService.ShowAsync<AddMatchDialog>("Add Match", parameters,
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseButton = true });
+        if (!(await dialog.Result)!.Canceled) await OnDataChanged.InvokeAsync();
+    }
+
+    private async Task OpenFinalizeMatch(Match m)
+    {
+        var parameters = new DialogParameters { { "Match", m } };
+        var dialog = await DialogService.ShowAsync<FinalizeMatchDialog>("Finalize Match", parameters,
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseButton = true });
+        if (!(await dialog.Result)!.Canceled) await OnDataChanged.InvokeAsync();
+    }
+
+    private async Task DeleteMatch(Match m)
+    {
+        var result = await DialogService.ShowAsync<ConfirmDialog>("Delete Match",
+            new DialogParameters { { "Message", $"Delete match vs {m.OpponentName}? All stats will be lost." } },
+            new DialogOptions { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true });
+        if (!(await result.Result)!.Canceled) await OnDataChanged.InvokeAsync();
+    }
+
+    private async Task OpenAiMatchFacts()
+    {
+        var parameters = new DialogParameters { { "Matches", Matches } };
+        var dialog = await DialogService.ShowAsync<MatchFactsUploadDialog>("AI Match Facts Upload", parameters,
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseButton = true });
+        if (!(await dialog.Result)!.Canceled) await OnDataChanged.InvokeAsync();
+    }
+
+    private async Task OpenMatchFacts()
+    {
+        var parameters = new DialogParameters { { "Matches", Matches } };
+        var dialog = await DialogService.ShowAsync<ManualMatchFactsDialog>("Manual Match Facts", parameters,
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseButton = true });
+        if (!(await dialog.Result)!.Canceled) await OnDataChanged.InvokeAsync();
+    }
+
+    private async Task OpenManualUpload()
+    {
+        var parameters = new DialogParameters { { "Matches", Matches } };
+        var dialog = await DialogService.ShowAsync<ManualStatUploadDialog>("Manual Stats Upload", parameters,
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseButton = true });
+        if (!(await dialog.Result)!.Canceled) await OnDataChanged.InvokeAsync();
+    }
+
+    private async Task OpenAiUpload()
+    {
+        var parameters = new DialogParameters { { "Matches", Matches } };
+        await DialogService.ShowAsync<AiStatUploadDialog>("AI Stats Upload", parameters,
+            new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = true });
+    }
+
+    private async Task OpenCsvImport()
+    {
+        var parameters = new DialogParameters { { "Matches", Matches } };
+        var dialog = await DialogService.ShowAsync<CsvStatUploadDialog>("CSV Stats Import", parameters,
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseButton = true });
+        if (!(await dialog.Result)!.Canceled) await OnDataChanged.InvokeAsync();
+    }
+
+    private static string ResultChipClass(EMatchResult? r) => r switch
+    {
+        EMatchResult.W => "ttf-chip--win",
+        EMatchResult.D => "ttf-chip--draw",
+        EMatchResult.L => "ttf-chip--loss",
+        _              => ""
+    };
+}

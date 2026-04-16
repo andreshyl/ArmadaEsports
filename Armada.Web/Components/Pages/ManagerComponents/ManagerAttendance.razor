@@ -25,14 +25,18 @@
     {
         <div class="ma__body">
 
-            <!-- CALENDAR: full month, all days, 7 cols -->
+            <!-- CALENDAR: headers separate from cells -->
             <div class="ma__calendar-col">
-                <div class="ma__calendar">
+                <!-- Day-of-week headers row -->
+                <div class="ma__cal-headers">
                     @foreach (var label in new[] { "LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB", "DOM" })
                     {
                         var isTraining = label is "LUN" or "MAR" or "MIÉ" or "JUE";
                         <div class="ma__cal-header @(isTraining ? "ma__cal-header--training" : "ma__cal-header--rest")">@label</div>
                     }
+                </div>
+                <!-- Day cells grid -->
+                <div class="ma__calendar">
                     @foreach (var week in _calendarWeeks)
                     {
                         @foreach (var day in week)
@@ -44,15 +48,14 @@
                             else
                             {
                                 var isTraining = IsTrainingDay(day.Value);
-                                var isFuture = day.Value > DateOnly.FromDateTime(DateTime.Today);
+                                var isFuture   = day.Value > DateOnly.FromDateTime(DateTime.Today);
                                 var isSelected = _selectedDay == day;
-                                var pct = !isFuture && isTraining ? GetDayAttendancePct(day.Value) : (int?)null;
+                                var pct        = !isFuture && isTraining ? GetDayAttendancePct(day.Value) : (int?)null;
 
                                 <div class="ma__cal-cell
-                                    @(isTraining ? "ma__cal-cell--training" : "ma__cal-cell--rest")
-                                    @(isSelected ? "ma__cal-cell--active" : "")
-                                    @(isFuture ? "ma__cal-cell--future" : "")
-                                    @(!isTraining ? "ma__cal-cell--noclick" : "")"
+                                            @(isTraining ? "ma__cal-cell--training" : "ma__cal-cell--rest")
+                                            @(isSelected ? "ma__cal-cell--active"   : "")
+                                            @(isFuture   ? "ma__cal-cell--future"   : "")"
                                      @onclick="() => { if (isTraining && !isFuture) SelectDay(day.Value); }">
                                     <span class="ma__day-num">@day.Value.Day</span>
                                     @if (pct.HasValue)
@@ -86,10 +89,7 @@
                                 <span class="ma__player-alias">@p.Alias</span>
                                 <span class="ma__player-pos">@p.PrimaryPosition.Code</span>
                                 <div class="ma__check @(present ? "ma__check--on" : "")">
-                                    @if (present)
-                                    {
-                                        <span>&#10003;</span>
-                                    }
+                                    @if (present) { <span>&#10003;</span> }
                                 </div>
                             </div>
                         }
@@ -159,12 +159,12 @@
         _loading = true;
         try
         {
-            _players = await PlayerSvc.GetAllAsync();
+            _players         = await PlayerSvc.GetAllAsync();
             _monthAttendance = await AttendanceSvc.GetByMonthAsync(_currentDate.Year, _currentDate.Month);
-            _monthlyStats = await AttendanceSvc.GetMonthlyStatsAsync(_currentDate.Year, _currentDate.Month);
-            _totalSessions = _monthlyStats.Values.Select(v => v.Total).FirstOrDefault();
+            _monthlyStats    = await AttendanceSvc.GetMonthlyStatsAsync(_currentDate.Year, _currentDate.Month);
+            _totalSessions   = _monthlyStats.Values.Select(v => v.Total).FirstOrDefault();
             BuildCalendar();
-            _selectedDay = null;
+            _selectedDay   = null;
             _sessionChecks = [];
         }
         catch (ObjectDisposedException) { return; }
@@ -177,10 +177,9 @@
     private void BuildCalendar()
     {
         _calendarWeeks = [];
-        var first = _currentDate;
-        var last = first.AddMonths(1).AddDays(-1);
-        var dow = (int)first.DayOfWeek; // Sun=0
-        // Adjust to Monday-first: Mon=0 ... Sun=6
+        var first  = _currentDate;
+        var last   = first.AddMonths(1).AddDays(-1);
+        var dow    = (int)first.DayOfWeek;
         var offset = dow == 0 ? 6 : dow - 1;
         var cursor = first.AddDays(-offset);
 
@@ -199,7 +198,7 @@
 
     private void SelectDay(DateOnly day)
     {
-        _selectedDay = day;
+        _selectedDay   = day;
         _sessionChecks = _players.ToDictionary(
             p => p.Id,
             p => _monthAttendance.Any(a => a.PlayerId == p.Id && a.SessionDate == day && a.Present));
@@ -233,7 +232,7 @@
     {
         >= 80 => "ma__pct--high",
         >= 50 => "ma__pct--mid",
-        _ => "ma__pct--low"
+        _     => "ma__pct--low"
     };
 
     private async Task PrevMonth() { _currentDate = _currentDate.AddMonths(-1); await LoadAsync(); }

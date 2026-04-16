@@ -67,7 +67,7 @@
     display: grid;
     grid-template-columns: 3fr 2fr;
     border-bottom: 1px solid var(--ttf-border);
-    align-items: stretch; /* both cols same height */
+    align-items: stretch;
     height: 30rem;
 }
 
@@ -77,18 +77,19 @@
     border-right: 1px solid var(--ttf-border);
     display: flex;
     flex-direction: column;
+    height: 100%;
+    min-height: 0;
 }
 
 .ma__calendar {
     display: grid;
     grid-template-columns: repeat(7, minmax(0, 1fr));
-    /* auto rows stretch to fill available height */
     grid-auto-rows: 1fr;
     gap: 2px;
-    flex: 1; /* fill full column height */
+    flex: 1;
+    min-height: 0;
 }
 
-/* Reserve header row from stretching */
 .ma__cal-header {
     font-family: 'IBM Plex Mono', monospace;
     font-size: 0.58rem;
@@ -99,7 +100,6 @@
     font-weight: 600;
     white-space: nowrap;
     overflow: hidden;
-    /* headers don't stretch */
     align-self: end;
 }
 
@@ -113,7 +113,6 @@
     border-bottom-color: var(--ttf-border);
 }
 
-/* Day cells — stretch to fill row height */
 .ma__cal-cell {
     border-radius: 3px;
     padding: 4px 2px;
@@ -125,9 +124,8 @@
     transition: border-color 0.12s, background 0.12s;
     border: 1px solid transparent;
     min-width: 0;
-    overflow: hidden;
-    /* stretch vertically inside grid-auto-rows: 1fr */
     min-height: 0;
+    overflow: hidden;
 }
 
 .ma__cal-cell--training {
@@ -196,7 +194,9 @@
     gap: 3px;
     overflow-y: auto;
     min-width: 0;
-    background: var(--ttf-off-white); /* consistent surface */
+    min-height: 0;
+    height: 100%;
+    background: var(--ttf-off-white);
 }
 
 .ma__session-header {
@@ -206,11 +206,11 @@
     margin-bottom: 6px;
     position: sticky;
     top: 0;
-    /* match session col surface — no transparency gap */
     background: var(--ttf-off-white);
     padding-bottom: 8px;
     border-bottom: 1px solid var(--ttf-border);
     z-index: 1;
+    flex-shrink: 0;
 }
 
 .ma__session-date {

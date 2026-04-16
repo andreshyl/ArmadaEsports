@@ -2,7 +2,7 @@
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 
-<div class="manager__section-card manager__plantilla-wrap">
+<div class="manager__section-card manager__plantilla-wrap" style="display:flex;flex-direction:column;height:100%;">
     <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-3">
         <MudText Typo="Typo.caption" Class="manager__section-title">PLANTILLA</MudText>
         <MudStack Row="true" Spacing="1">
@@ -15,47 +15,49 @@
         </MudStack>
     </MudStack>
 
-    <MudTable T="Player" Items="Players" Dense="true" Elevation="0" FixedHeader="true" Height="65vh">
-        <HeaderContent>
-            <MudTh>#</MudTh><MudTh>Player</MudTh><MudTh>Pos</MudTh><MudTh>OVR</MudTh><MudTh></MudTh>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd>@context.JerseyNumber</MudTd>
-            <MudTd>
-                <div class="mp__player-cell">
-                    <div class="mp__avatar @(context.PrimaryPosition?.Code == "PO" ? "mp__avatar--gk" : "")">
-                        @(context.JerseyNumber?.ToString() ?? Initials(context.Alias))
+    <div style="flex:1;overflow-y:auto;overflow-x:hidden;min-height:0;">
+        <MudTable T="Player" Items="Players" Dense="true" Elevation="0" FixedHeader="true" Height="100%">
+            <HeaderContent>
+                <MudTh>#</MudTh><MudTh>Player</MudTh><MudTh>Pos</MudTh><MudTh>OVR</MudTh><MudTh></MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>@context.JerseyNumber</MudTd>
+                <MudTd>
+                    <div class="mp__player-cell">
+                        <div class="mp__avatar @(context.PrimaryPosition?.Code == "PO" ? "mp__avatar--gk" : "")">
+                            @(context.JerseyNumber?.ToString() ?? Initials(context.Alias))
+                        </div>
+                        <span class="manager__player-alias">@context.Alias</span>
                     </div>
-                    <span class="manager__player-alias">@context.Alias</span>
-                </div>
-            </MudTd>
-            <MudTd>
-                <MudChip T="string" Size="Size.Small" Class="ttf-chip--dark">
-                    @context.PrimaryPosition?.Code
-                </MudChip>
-            </MudTd>
-            <MudTd>
-                @if (Ratings.TryGetValue(context.Id, out var ovr))
-                {
-                    <MudChip T="string" Size="Size.Small" Class="ttf-chip--gold">@ovr.ToString("F1")</MudChip>
-                }
-                else
-                {
-                    <span class="mp__no-rating">—</span>
-                }
-            </MudTd>
-            <MudTd>
-                <MudStack Row="true" Spacing="1">
-                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
-                                   OnClick="@(() => OpenEditPlayer(context))" />
-                    <MudIconButton Icon="@Icons.Material.Filled.BarChart" Size="Size.Small"
-                                   OnClick="@(() => OpenAddSnapshot(context))" />
-                    <MudIconButton Icon="@Icons.Material.Filled.PersonOff" Size="Size.Small"
-                                   Color="Color.Error" OnClick="@(() => DeletePlayer(context))" />
-                </MudStack>
-            </MudTd>
-        </RowTemplate>
-    </MudTable>
+                </MudTd>
+                <MudTd>
+                    <MudChip T="string" Size="Size.Small" Class="ttf-chip--dark">
+                        @context.PrimaryPosition?.Code
+                    </MudChip>
+                </MudTd>
+                <MudTd>
+                    @if (Ratings.TryGetValue(context.Id, out var ovr))
+                    {
+                        <MudChip T="string" Size="Size.Small" Class="ttf-chip--gold">@ovr.ToString("F1")</MudChip>
+                    }
+                    else
+                    {
+                        <span class="mp__no-rating">—</span>
+                    }
+                </MudTd>
+                <MudTd>
+                    <MudStack Row="true" Spacing="1">
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
+                                       OnClick="@(() => OpenEditPlayer(context))" />
+                        <MudIconButton Icon="@Icons.Material.Filled.BarChart" Size="Size.Small"
+                                       OnClick="@(() => OpenAddSnapshot(context))" />
+                        <MudIconButton Icon="@Icons.Material.Filled.PersonOff" Size="Size.Small"
+                                       Color="Color.Error" OnClick="@(() => DeletePlayer(context))" />
+                    </MudStack>
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    </div>
 </div>
 
 @code {

@@ -114,7 +114,9 @@
                 </div>
                 @foreach (var p in _players.OrderByDescending(p => GetAttendancePct(p.Id)))
                 {
-                    var (pres, total) = _monthlyStats.GetValueOrDefault(p.Id, (0, _totalSessions));
+                    int pres, total;
+                    if (_monthlyStats.TryGetValue(p.Id, out var s)) { pres = s.Present; total = s.Total; }
+                    else { pres = 0; total = _totalSessions; }
                     var pct = total > 0 ? (int)Math.Round((double)pres / total * 100) : 0;
                     <div class="ma__stats-row">
                         <span class="ma__stats-alias">@p.Alias</span>
@@ -139,7 +141,7 @@
     private DateOnly _currentDate = DateOnly.FromDateTime(DateTime.Today).AddDays(1 - DateTime.Today.Day);
     private List<Player> _players = [];
     private List<TrainingAttendance> _monthAttendance = [];
-    private Dictionary<int, (int Present, int Total)> _monthlyStats = [];
+    private Dictionary<int, (int Present, int Total)> _monthlyStats = new();
     private List<DateOnly?> _calendarDays = []; // flat list — no nested loops
     private DateOnly? _selectedDay;
     private Dictionary<int, bool> _sessionChecks = [];
@@ -253,8 +255,9 @@
 
     private int GetAttendancePct(int playerId)
     {
-        var (pres, total) = _monthlyStats.GetValueOrDefault(playerId, (0, _totalSessions));
-        return total > 0 ? (int)Math.Round((double)pres / total * 100) : 0;
+        if (_monthlyStats.TryGetValue(playerId, out var s))
+            return s.Total > 0 ? (int)Math.Round((double)s.Present / s.Total * 100) : 0;
+        return _totalSessions > 0 ? 0 : 0;
     }
 
     private static string GetPctClass(int pct) => pct switch

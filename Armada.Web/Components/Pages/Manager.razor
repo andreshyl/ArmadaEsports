@@ -34,15 +34,15 @@
     }
     else
     {
-        <MudGrid Spacing="4" Style="align-items: stretch;">
+        <MudGrid Spacing="4">
 
             <!-- PLANTILLA -->
-            <MudItem xs="12" md="6" Style="display:flex;flex-direction:column;">
+            <MudItem xs="12" md="6">
                 <ManagerPlantilla Players="_players" Ratings="_ratings" OnDataChanged="LoadDataAsync" />
             </MudItem>
 
             <!-- SQUAD PLANNER + COMPETITIONS stacked in right column -->
-            <MudItem xs="12" md="6" Style="display:flex;flex-direction:column;">
+            <MudItem xs="12" md="6">
                 <MudStack Spacing="4">
                     <div class="manager__section-card">
                         <SquadPlanner Players="_players" Ratings="_ratings" />
@@ -64,22 +64,22 @@
 </MudContainer>
 
 @code {
-    private List<Player> _players = [];
+    private List<Player>      _players      = [];
     private List<Competition> _competitions = [];
-    private List<Match> _matches = [];
+    private List<Match>       _matches      = [];
     private Dictionary<int, decimal> _ratings = [];
-    private bool _loading = true;
+    private bool              _loading      = true;
 
     protected override async Task OnInitializedAsync() => await LoadDataAsync();
 
     private async Task LoadDataAsync()
     {
         _loading = true;
-        _players = await PlayerService.GetAllAsync(includeInactive: true);
+        _players      = await PlayerService.GetAllAsync(includeInactive: true);
         _competitions = await CompetitionService.GetAllAsync(includeInactive: true);
-        var upcoming = await MatchService.GetUpcomingAsync();
-        var finished = await MatchService.GetFinishedAsync();
-        _matches = [.. finished, .. upcoming];
+        var upcoming  = await MatchService.GetUpcomingAsync();
+        var finished  = await MatchService.GetFinishedAsync();
+        _matches      = [.. finished, .. upcoming];
         // Load latest overall rating per player
         _ratings = [];
         foreach (var p in _players)

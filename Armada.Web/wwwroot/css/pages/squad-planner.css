@@ -29,7 +29,7 @@
     gap: 0.625rem;
     min-width: 0;
     overflow: hidden;
-    align-items: stretch;
+    align-items: start;
 }
 
 /* ── PITCH ──────────────────────────────────────────── */
@@ -37,7 +37,6 @@
     display: flex;
     flex-direction: column;
     min-width: 0;
-    height: 100%;
 }
 
 .sp__pitch {
@@ -216,8 +215,6 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    align-self: stretch;
-    height: 100%;
 }
 
 .sp__bench-header {
@@ -241,7 +238,7 @@
     gap: 0.125rem;
     overflow-y: auto;
     overflow-x: hidden;
-    flex: 1;
+    max-height: 32rem;
 }
 
 .sp__bench-player {
@@ -479,7 +476,6 @@
     flex-direction: column;
     gap: 0.375rem;
     margin-top: 0.5rem;
-    flex: 1;
 }
 
 .sp__rating-card {
@@ -488,7 +484,6 @@
     align-items: center;
     justify-content: space-between;
     padding: 0.5rem 0.75rem;
-    flex: 1;
     background: var(--ttf-white);
     border: 0.5px solid var(--ttf-border);
     border-radius: var(--ttf-radius-sm);

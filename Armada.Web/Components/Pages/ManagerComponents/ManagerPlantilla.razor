@@ -15,7 +15,7 @@
         </MudStack>
     </MudStack>
 
-    <MudTable T="Player" Items="Players" Dense="true" Elevation="0">
+    <MudTable T="Player" Items="Players" Dense="true" Elevation="0" FixedHeader="true" Height="32rem">
         <HeaderContent>
             <MudTh>#</MudTh><MudTh>Player</MudTh><MudTh>Pos</MudTh><MudTh>OVR</MudTh><MudTh></MudTh>
         </HeaderContent>
@@ -24,7 +24,7 @@
             <MudTd>
                 <div class="mp__player-cell">
                     <div class="mp__avatar @(context.PrimaryPosition?.Code == "PO" ? "mp__avatar--gk" : "")">
-                        @Initials(context.Alias)
+                        @(context.JerseyNumber?.ToString() ?? Initials(context.Alias))
                     </div>
                     <span class="manager__player-alias">@context.Alias</span>
                 </div>

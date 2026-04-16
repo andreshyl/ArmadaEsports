@@ -134,11 +134,15 @@
 .manager__plantilla-wrap {
     display: flex;
     flex-direction: column;
-    height: 100%;
-    overflow: hidden;
+    max-height: 62rem;
+    overflow: auto;
 }
 
     .manager__plantilla-wrap .mud-table-container {
-        flex: 1;
         overflow-y: auto;
     }
+
+
+.plantilla-player-table {
+    height: 100%;
+}

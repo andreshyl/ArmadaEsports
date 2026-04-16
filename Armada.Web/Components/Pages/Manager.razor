@@ -4,8 +4,8 @@
 @inject IPlayerService PlayerService
 @inject IMatchService MatchService
 @inject ICompetitionService CompetitionService
-@inject TtfAuthStateProvider AuthProvider
 @inject IAttributeService AttributeService
+@inject TtfAuthStateProvider AuthProvider
 @inject NavigationManager Nav
 
 <PageTitle>Manager — TTF Esports</PageTitle>
@@ -37,7 +37,7 @@
         <MudGrid Spacing="4">
 
             <!-- PLANTILLA -->
-            <MudItem xs="12" md="6" Style="display:flex;flex-direction:column;">
+            <MudItem xs="12" md="6">
                 <ManagerPlantilla Players="_players" Ratings="_ratings" OnDataChanged="LoadDataAsync" />
             </MudItem>
 
@@ -80,7 +80,7 @@
         var upcoming = await MatchService.GetUpcomingAsync();
         var finished = await MatchService.GetFinishedAsync();
         _matches = [.. finished, .. upcoming];
-        // Load latest overall rating per player
+
         _ratings = [];
         foreach (var p in _players)
         {

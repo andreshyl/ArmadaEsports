@@ -68,6 +68,7 @@
     grid-template-columns: 3fr 2fr;
     border-bottom: 1px solid var(--ttf-border);
     align-items: stretch; /* both cols same height */
+    height: 30rem;
 }
 
 /* ── CALENDAR COL ── */

@@ -1,6 +1,7 @@
 @namespace Armada.Web.Components.Pages.ManagerComponents
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
+@inject IPlayerService PlayerService
 
 <div class="manager__section-card manager__plantilla-wrap">
 
@@ -95,10 +96,23 @@
 
     private async Task DeletePlayer(Player p)
     {
-        var result = await DialogService.ShowAsync<ConfirmDialog>("Delete Player",
-            new DialogParameters { { "Message", $"Delete {p.Alias}? This cannot be undone." } },
+        var result = await DialogService.ShowAsync<ConfirmDialog>("Remove Player",
+            new DialogParameters { { "Message", $"Remove {p.Alias} from the squad? This cannot be undone." } },
             new DialogOptions { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true });
-        if (!(await result.Result)!.Canceled) await OnDataChanged.InvokeAsync();
+
+        if (!(await result.Result)!.Canceled)
+        {
+            var success = await PlayerService.DeactivateAsync(p.Id);
+            if (success)
+            {
+                Snackbar.Add($"{p.Alias} removed from squad.", Severity.Success);
+                await OnDataChanged.InvokeAsync();
+            }
+            else
+            {
+                Snackbar.Add($"Could not remove {p.Alias}. Player not found.", Severity.Error);
+            }
+        }
     }
 
     private async Task OpenCsvAttributeImport()

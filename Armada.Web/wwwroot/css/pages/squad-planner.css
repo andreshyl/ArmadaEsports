@@ -264,8 +264,8 @@
     }
 
 .sp__bench-avatar {
-    width: 1.575rem;
-    height: 1.575rem;
+    width: 2rem;
+    height: 2rem;
     border-radius: 50%;
     background: linear-gradient(135deg, #1a3a5c, #0d2a45);
     border: 1.5px solid rgba(201,168,76,0.4);

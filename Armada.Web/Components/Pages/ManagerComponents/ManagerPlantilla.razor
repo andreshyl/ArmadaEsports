@@ -2,6 +2,8 @@
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @inject IPlayerService PlayerService
+@inject IAttributeService AttributeService
+@inject IJSRuntime JS
 
 <div class="manager__section-card manager__plantilla-wrap">
 
@@ -13,6 +15,8 @@
                            OnClick="OpenCsvPlayerImport">CSV Players</MudButton>
                 <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning"
                            OnClick="OpenCsvAttributeImport">CSV Attrs</MudButton>
+                <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning"
+                           OnClick="ExportAttributesCsv">Export Attrs</MudButton>
                 <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning"
                            OnClick="OpenAddPlayer">+ Add Player</MudButton>
             </MudStack>
@@ -54,6 +58,8 @@
                         <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
                                        OnClick="@(() => OpenEditPlayer(context))" />
                         <MudIconButton Icon="@Icons.Material.Filled.BarChart" Size="Size.Small"
+                                       OnClick="@(() => OpenSnapshotHistory(context))" />
+                        <MudIconButton Icon="@Icons.Material.Filled.AddChart" Size="Size.Small"
                                        OnClick="@(() => OpenAddSnapshot(context))" />
                         <MudIconButton Icon="@Icons.Material.Filled.PersonOff" Size="Size.Small"
                                        Color="Color.Error" OnClick="@(() => DeletePlayer(context))" />
@@ -68,6 +74,13 @@
     [Parameter] public List<Player> Players { get; set; } = [];
     [Parameter] public Dictionary<int, decimal> Ratings { get; set; } = [];
     [Parameter] public EventCallback OnDataChanged { get; set; }
+
+    private static readonly string[] AttributeNames =
+    [
+        "Comunicación", "Juego en Equipo", "Posicionamiento", "Decisiones",
+        "Reacción", "Creatividad", "Consistencia", "Adaptabilidad",
+        "Precisión", "Compostura"
+    ];
 
     private static string Initials(string alias) =>
         alias.Length >= 2 ? alias[..2].ToUpper() : alias.ToUpper();
@@ -94,6 +107,28 @@
             new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseButton = true });
     }
 
+    private async Task OpenSnapshotHistory(Player p)
+    {
+        var snapshots = await AttributeService.GetSnapshotsByPlayerAsync(p.Id);
+        if (!snapshots.Any())
+        {
+            await DialogService.ShowMessageBox("No Snapshots", $"{p.Alias} has no recorded attribute snapshots.");
+            return;
+        }
+
+        var parameters = new DialogParameters
+        {
+            { "Player", p },
+            { "Snapshots", snapshots }
+        };
+        var dialog = await DialogService.ShowAsync<SnapshotHistoryDialog>($"Snapshots — {p.Alias}", parameters,
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseButton = true });
+
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: true })
+            await OnDataChanged.InvokeAsync();
+    }
+
     private async Task DeletePlayer(Player p)
     {
         var result = await DialogService.ShowAsync<ConfirmDialog>("Remove Player",
@@ -113,6 +148,35 @@
                 Snackbar.Add($"Could not remove {p.Alias}. Player not found.", Severity.Error);
             }
         }
+    }
+
+    private async Task ExportAttributesCsv()
+    {
+        var sb = new System.Text.StringBuilder();
+        sb.Append("Alias,Posicion,Fecha,OVR");
+        foreach (var name in AttributeNames)
+            sb.Append($",{name}");
+        sb.AppendLine();
+
+        foreach (var player in Players)
+        {
+            var snapshots = await AttributeService.GetSnapshotsByPlayerAsync(player.Id);
+            foreach (var snap in snapshots)
+            {
+                sb.Append($"{player.Alias},{player.PrimaryPosition?.Code},{snap.SnapshotDate:yyyy-MM-dd},{snap.OverallRating:F1}");
+                for (byte i = 0; i < 10; i++)
+                {
+                    var score = snap.Scores.FirstOrDefault(s => s.AttributeIndex == i)?.Score ?? 0;
+                    sb.Append($",{score}");
+                }
+                sb.AppendLine();
+            }
+        }
+
+        var filename = $"armada_attributes_{DateTime.Today:yyyyMMdd}.csv";
+        var bytes = System.Text.Encoding.UTF8.GetBytes(sb.ToString());
+        var base64 = Convert.ToBase64String(bytes);
+        await JS.InvokeVoidAsync("downloadBase64File", base64, filename, "text/csv");
     }
 
     private async Task OpenCsvAttributeImport()

@@ -71,6 +71,31 @@ public class AttributeService(IDbContextFactory<ArmadaDbContext> factory) : IAtt
         return existing;
     }
 
+    public async Task<PlayerAttributeSnapshot?> UpdateSnapshotAsync(
+        int snapshotId, string positionCode, byte[] scores, string? notes)
+    {
+        await using var db = await factory.CreateDbContextAsync();
+
+        var snapshot = await db.PlayerAttributeSnapshots
+            .Include(s => s.Scores)
+            .FirstOrDefaultAsync(s => s.Id == snapshotId);
+
+        if (snapshot is null) return null;
+
+        snapshot.OverallRating = AttributeWeights.ComputeOverallRating(positionCode, scores);
+        snapshot.Notes = notes;
+        db.PlayerAttributeScores.RemoveRange(snapshot.Scores);
+        snapshot.Scores = scores.Select((score, index) => new PlayerAttributeScore
+        {
+            SnapshotId = snapshot.Id,
+            AttributeIndex = (byte)index,
+            Score = score
+        }).ToList();
+
+        await db.SaveChangesAsync();
+        return snapshot;
+    }
+
     public async Task DeleteSnapshotAsync(int snapshotId)
     {
         await using var db = await factory.CreateDbContextAsync();
@@ -82,7 +107,6 @@ public class AttributeService(IDbContextFactory<ArmadaDbContext> factory) : IAtt
         await db.SaveChangesAsync();
     }
 
-    // Sync — no DB access, pure computation
     public decimal ComputeOverallRating(string positionCode, byte[] scores) =>
         AttributeWeights.ComputeOverallRating(positionCode, scores);
 

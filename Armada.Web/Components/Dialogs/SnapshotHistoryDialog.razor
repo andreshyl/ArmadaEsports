@@ -1,0 +1,78 @@
+﻿@inject IAttributeService AttributeService
+@inject IDialogService DialogService
+
+<MudDialog>
+    <DialogContent>
+        <MudStack Spacing="2">
+            @foreach (var snap in Snapshots.OrderByDescending(s => s.SnapshotDate))
+            {
+                <MudPaper Class="pa-2" Elevation="0" Outlined="true">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                        <MudStack Spacing="0">
+                            <MudText Typo="Typo.body2">@snap.SnapshotDate.ToString("yyyy-MM-dd")</MudText>
+                            <MudChip T="string" Size="Size.Small" Class="ttf-chip--gold">@snap.OverallRating.ToString("F1")</MudChip>
+                        </MudStack>
+                        <MudStack Row="true" Spacing="1">
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
+                                           OnClick="@(() => OpenEdit(snap))" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small"
+                                           Color="Color.Error" OnClick="@(() => DeleteSnapshot(snap))" />
+                        </MudStack>
+                    </MudStack>
+                    @if (!string.IsNullOrWhiteSpace(snap.Notes))
+                    {
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">@snap.Notes</MudText>
+                    }
+                </MudPaper>
+            }
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => MudDialog.Close(DialogResult.Ok(_dirty)))" Variant="Variant.Text">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+    [Parameter] public Player Player { get; set; } = null!;
+    [Parameter] public List<PlayerAttributeSnapshot> Snapshots { get; set; } = [];
+
+    private bool _dirty;
+
+    private async Task OpenEdit(PlayerAttributeSnapshot snap)
+    {
+        var parameters = new DialogParameters
+        {
+            { "Player", Player },
+            { "Snapshot", snap }
+        };
+        var dialog = await DialogService.ShowAsync<EditAttributeSnapshotDialog>(
+            $"Edit — {snap.SnapshotDate:yyyy-MM-dd}", parameters,
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseButton = true });
+
+        if (!(await dialog.Result)!.Canceled)
+        {
+            var updated = await AttributeService.GetSnapshotsByPlayerAsync(Player.Id);
+            Snapshots.Clear();
+            Snapshots.AddRange(updated);
+            _dirty = true;
+            StateHasChanged();
+        }
+    }
+
+    private async Task DeleteSnapshot(PlayerAttributeSnapshot snap)
+    {
+        var result = await DialogService.ShowMessageBox(
+            "Delete Snapshot",
+            $"Delete snapshot from {snap.SnapshotDate:yyyy-MM-dd}? This cannot be undone.",
+            yesText: "Delete", cancelText: "Cancel");
+
+        if (result == true)
+        {
+            await AttributeService.DeleteSnapshotAsync(snap.Id);
+            Snapshots.Remove(snap);
+            _dirty = true;
+            StateHasChanged();
+        }
+    }
+}

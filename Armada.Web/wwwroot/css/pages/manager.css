@@ -149,7 +149,6 @@
 .manager__plantilla-scroll {
     overflow-y: auto;
     flex: 1; /* fills remaining height exactly */
-    padding: 0 20px 16px;
     min-height: 0; /* required for flex children to scroll */
 }
 

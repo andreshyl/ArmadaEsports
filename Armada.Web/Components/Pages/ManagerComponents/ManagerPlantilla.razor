@@ -26,17 +26,16 @@
     <div class="manager__plantilla-scroll">
         <MudTable T="Player" Items="Players" Dense="true" Elevation="0" Class="plantilla-player-list">
             <HeaderContent>
-                <MudTh>#</MudTh><MudTh>Player</MudTh><MudTh>Pos</MudTh><MudTh>OVR</MudTh><MudTh></MudTh>
+                <MudTh></MudTh><MudTh>Player</MudTh><MudTh>Pos</MudTh><MudTh>OVR</MudTh><MudTh></MudTh>
             </HeaderContent>
             <RowTemplate>
-                <MudTd>@context.JerseyNumber</MudTd>
                 <MudTd>
-                    <div class="mp__player-cell">
-                        <div class="mp__avatar @(context.PrimaryPosition?.Code == "PO" ? "mp__avatar--gk" : "")">
-                            @(context.JerseyNumber?.ToString() ?? Initials(context.Alias))
-                        </div>
-                        <span class="manager__player-alias">@context.Alias</span>
+                    <div class="mp__avatar @(context.PrimaryPosition?.Code == "PO" ? "mp__avatar--gk" : "")">
+                        @(context.JerseyNumber?.ToString() ?? Initials(context.Alias))
                     </div>
+                </MudTd>
+                <MudTd>
+                    <span class="manager__player-alias">@context.Alias</span>
                 </MudTd>
                 <MudTd>
                     <MudChip T="string" Size="Size.Small" Class="ttf-chip--dark">

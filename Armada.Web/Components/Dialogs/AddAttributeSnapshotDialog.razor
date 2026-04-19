@@ -28,22 +28,23 @@
                 <MudStack Spacing="1">
                     @foreach (var snap in _snapshots)
                     {
+                        var localSnap = snap;
                         <MudPaper Class="pa-2" Elevation="0" Outlined="true">
                             <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
                                 <MudStack Spacing="0">
-                                    <MudText Typo="Typo.body2">@snap.SnapshotDate.ToString("yyyy-MM-dd")</MudText>
-                                    <MudChip T="string" Size="Size.Small" Class="ttf-chip--gold">@snap.OverallRating.ToString("F1")</MudChip>
+                                    <MudText Typo="Typo.body2">@localSnap.SnapshotDate.ToString("yyyy-MM-dd")</MudText>
+                                    <MudChip T="string" Size="Size.Small" Class="ttf-chip--gold">@localSnap.OverallRating.ToString("F1")</MudChip>
                                 </MudStack>
                                 <MudStack Row="true" Spacing="0">
                                     <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
-                                                   OnClick="@(() => OpenEdit(snap))" />
+                                                   OnClick="@(() => OpenEdit(localSnap))" />
                                     <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small"
-                                                   Color="Color.Error" OnClick="@(() => DeleteSnapshot(snap))" />
+                                                   Color="Color.Error" OnClick="@(() => DeleteSnapshot(localSnap))" />
                                 </MudStack>
                             </MudStack>
-                            @if (!string.IsNullOrWhiteSpace(snap.Notes))
+                            @if (!string.IsNullOrWhiteSpace(localSnap.Notes))
                             {
-                                <MudText Typo="Typo.caption" Color="Color.Secondary">@snap.Notes</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">@localSnap.Notes</MudText>
                             }
                         </MudPaper>
                     }
@@ -117,12 +118,11 @@
 
     private async Task DeleteSnapshot(PlayerAttributeSnapshot snap)
     {
-        var result = await DialogService.ShowMessageBox(
-            "Delete Snapshot",
-            $"Delete snapshot from {snap.SnapshotDate:yyyy-MM-dd}? This cannot be undone.",
-            yesText: "Delete", cancelText: "Cancel");
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Delete Snapshot",
+            new DialogParameters { { "Message", $"Delete snapshot from {snap.SnapshotDate:yyyy-MM-dd}? This cannot be undone." } },
+            new DialogOptions { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true });
 
-        if (result == true)
+        if (!(await dialog.Result)!.Canceled)
         {
             await AttributeService.DeleteSnapshotAsync(snap.Id);
             _snapshots.Remove(snap);

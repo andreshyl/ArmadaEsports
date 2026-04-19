@@ -112,7 +112,9 @@
         var snapshots = await AttributeService.GetSnapshotsByPlayerAsync(p.Id);
         if (!snapshots.Any())
         {
-            await DialogService.ShowMessageBox("No Snapshots", $"{p.Alias} has no recorded attribute snapshots.");
+            await DialogService.ShowAsync<ConfirmDialog>("No Snapshots",
+                new DialogParameters { { "Message", $"{p.Alias} has no recorded attribute snapshots." } },
+                new DialogOptions { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true });
             return;
         }
 

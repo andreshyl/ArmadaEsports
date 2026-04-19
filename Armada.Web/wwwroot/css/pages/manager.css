@@ -161,3 +161,40 @@
 .matches-section {
     padding: 2rem 0 2rem 0;
 }
+
+/* ── PLANTILLA TABLE ────────────────────────────────── */
+.plantilla-player-list {
+    table-layout: fixed;
+    width: 100%;
+}
+
+    .plantilla-player-list .mud-table-cell:nth-child(1) {
+        width: 2rem;
+    }
+    /* # */
+    .plantilla-player-list .mud-table-cell:nth-child(2) {
+        width: auto;
+    }
+    /* Player */
+    .plantilla-player-list .mud-table-cell:nth-child(3) {
+        width: 3rem;
+    }
+    /* Pos */
+    .plantilla-player-list .mud-table-cell:nth-child(4) {
+        width: 3.5rem;
+    }
+    /* OVR */
+    .plantilla-player-list .mud-table-cell:nth-child(5) {
+        width: 7.5rem;
+    }
+    /* Actions */
+
+    .plantilla-player-list .mud-icon-button {
+        padding: 2px;
+        width: 1.6rem;
+        height: 1.6rem;
+    }
+
+        .plantilla-player-list .mud-icon-button .mud-icon-root {
+            font-size: 1rem;
+        }

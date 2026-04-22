@@ -1,5 +1,6 @@
 @namespace Armada.Web.Components.Pages.ManagerComponents
 @inject IDialogService DialogService
+@inject ICompetitionService CompetitionService
 
 <div class="manager__section-card">
     <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-3">
@@ -24,8 +25,8 @@
 </div>
 
 @code {
-    [Parameter] public List<Competition> Competitions   { get; set; } = [];
-    [Parameter] public EventCallback     OnDataChanged  { get; set; }
+    [Parameter] public List<Competition> Competitions { get; set; } = [];
+    [Parameter] public EventCallback OnDataChanged { get; set; }
 
     private async Task OpenAddCompetition()
     {
@@ -39,6 +40,10 @@
         var result = await DialogService.ShowAsync<ConfirmDialog>("Delete Competition",
             new DialogParameters { { "Message", $"Delete \"{c.Name}\"? All related matches will also be removed." } },
             new DialogOptions { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true });
-        if (!(await result.Result)!.Canceled) await OnDataChanged.InvokeAsync();
+        if (!(await result.Result)!.Canceled)
+        {
+            await CompetitionService.DeleteAsync(c.Id);
+            await OnDataChanged.InvokeAsync();
+        }
     }
 }

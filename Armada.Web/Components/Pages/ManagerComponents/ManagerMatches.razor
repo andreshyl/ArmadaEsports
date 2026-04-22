@@ -1,5 +1,6 @@
 @namespace Armada.Web.Components.Pages.ManagerComponents
 @inject IDialogService DialogService
+@inject IMatchService MatchService
 
 <div class="manager__section-card">
     <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-3">
@@ -52,9 +53,9 @@
 </div>
 
 @code {
-    [Parameter] public List<Match>       Matches       { get; set; } = [];
-    [Parameter] public List<Competition> Competitions  { get; set; } = [];
-    [Parameter] public EventCallback     OnDataChanged { get; set; }
+    [Parameter] public List<Match> Matches { get; set; } = [];
+    [Parameter] public List<Competition> Competitions { get; set; } = [];
+    [Parameter] public EventCallback OnDataChanged { get; set; }
 
     private async Task OpenAddMatch()
     {
@@ -77,7 +78,11 @@
         var result = await DialogService.ShowAsync<ConfirmDialog>("Delete Match",
             new DialogParameters { { "Message", $"Delete match vs {m.OpponentName}? All stats will be lost." } },
             new DialogOptions { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true });
-        if (!(await result.Result)!.Canceled) await OnDataChanged.InvokeAsync();
+        if (!(await result.Result)!.Canceled)
+        {
+            await MatchService.DeleteAsync(m.Id);
+            await OnDataChanged.InvokeAsync();
+        }
     }
 
     private async Task OpenAiMatchFacts()
@@ -124,6 +129,6 @@
         EMatchResult.W => "ttf-chip--win",
         EMatchResult.D => "ttf-chip--draw",
         EMatchResult.L => "ttf-chip--loss",
-        _              => ""
+        _ => ""
     };
 }
